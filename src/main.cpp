@@ -1,104 +1,96 @@
 #include <Arduino.h>
-#include <Wire.h>
-#include "BMI088.h"
-#include <math.h>
+#include "KuDAQ.h"
 
-#define I2C_SDA_PIN 23
-#define I2C_SCL_PIN 19
+// mutlicore
+TaskHandle_t Task1;
+TaskHandle_t Task2;
 
-/* accel object */
-Bmi088Accel accel_1(Wire,0x18);
-Bmi088Gyro gyro_1(Wire,0x68);
+// sensor definition
+Sensor sensor1(ACCEL1_ADDR, GYRO1_ADDR);
+Sensor sensor2(ACCEL2_ADDR, GYRO2_ADDR);
 
-Bmi088Accel accel_2(Wire,0x19);
-Bmi088Gyro gyro_2(Wire,0x69);
+// common structs
+static sensor_buffer_t accel_data_1;
+static sensor_buffer_t gyro_data_1;
+static sensor_buffer_t accel_data_2;
+static sensor_buffer_t gyro_data_2;
+static bool data_ready = false;
 
-// Fonction pour calculer le coefficient 'a'
-double calculate_a(double fc, double Ts) {
-    return exp(-2.0 * M_PI * fc * Ts);
-}
-
-// Fonction du filtre passe-bas du premier ordre
-double low_pass_filter(double x_k, double x_k_prev, double a, double b) {
-    return b * x_k + a * x_k_prev;
-}
-
-// Fréquence de coupure et période d'échantillonnage
-  double fc = 50.0; // en Hz
-  double Ts = 0.01;  // en secondes
-
-void setup() 
-{
-    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN, 400000); // 400 kHz I2C
-    int status;
-    /* USB Serial to print data */
-    Serial.begin(115200);
-    while(!Serial) {}
-    /* start the sensors */
-    status = accel_1.begin();
-    if (status < 0) {
-        Serial.println("Accel 1 Initialization Error");
-        Serial.println(status);
-        while (1) {}
-  }
-  status = gyro_1.begin();
-  if (status < 0) {
-    Serial.println("Gyro 1 Initialization Error");
-    Serial.println(status);
-    while (1) {}
-  }
-  status = accel_2.begin();
-    if (status < 0) {
-        Serial.println("Accel 2 Initialization Error");
-        Serial.println(status);
-        while (1) {}
-  }
-  status = gyro_2.begin();
-  if (status < 0) {
-    Serial.println("Gyro 2 Initialization Error");
-    Serial.println(status);
-    while (1) {}
+void taskCore0(void * parameter) {
+  for(;;) {
+    sensor1.aquisition();
+    sensor2.aquisition();
+    data_ready = sensor1.newDataReady() || sensor2.newDataReady();
+    accel_data_1 = sensor1.getFilteredAccel();
+    gyro_data_1 = sensor1.getFilteredGyro();
+    accel_data_2 = sensor2.getFilteredAccel();
+    gyro_data_2 = sensor2.getFilteredGyro();
+    delay(1000);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
-void loop() 
-{
-  static float X, Y, Z;
-  static float X_prev = 0.0, Y_prev = 0.0, Z_prev = 0.0;
-  //static float X_rads, Y_rads, Z_rads;
-  static constexpr int div = 60;
-  static constexpr float scale = 20.0f / div;
+void taskCore1(void * parameter) {
+  for(;;) {
+    if (data_ready) {
+      Serial.println("New data available:");
+      Serial.print("Sensor 1 - Accel: ");
+      Serial.print(accel_data_1.xyz_buffer[0]);
+      Serial.print(", ");
+      Serial.print(accel_data_1.xyz_buffer[1]);
+      Serial.print(", ");
+      Serial.print(accel_data_1.xyz_buffer[2]);
+      Serial.print(" | Gyro: ");
+      Serial.print(gyro_data_1.xyz_buffer[0]);
+      Serial.print(", ");
+      Serial.print(gyro_data_1.xyz_buffer[1]);
+      Serial.print(", ");
+      Serial.println(gyro_data_1.xyz_buffer[2]);
 
-    accel_1.readSensor();
-    gyro_1.readSensor();
+      Serial.print("Sensor 2 - Accel: ");
+      Serial.print(accel_data_2.xyz_buffer[0]);
+      Serial.print(", ");
+      Serial.print(accel_data_2.xyz_buffer[1]);
+      Serial.print(", ");
+      Serial.print(accel_data_2.xyz_buffer[2]);
+      Serial.print(" | Gyro: ");
+      Serial.print(gyro_data_2.xyz_buffer[0]);
+      Serial.print(", ");
+      Serial.print(gyro_data_2.xyz_buffer[1]);
+      Serial.print(", ");
+      Serial.println(gyro_data_2.xyz_buffer[2]);
 
-    X = accel_1.getAccelX_mss();
-    Y = accel_1.getAccelY_mss();
-    Z = accel_1.getAccelZ_mss();
+      data_ready = false; // reset the flag
+    }
+    else {
+      Serial.println("No new data available.");
+    }
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+}
 
-    // Calcul des coefficients
-    double a = calculate_a(fc, Ts);
-    double b = 1 - a;
+void setup() {
+  Serial.begin(115200);
 
-    // Application du filtre passe-bas
-    X = low_pass_filter(X, X_prev, a, b);
-    Y = low_pass_filter(Y, Y_prev, a, b);
-    Z = low_pass_filter(Z, Z_prev, a, b);
+  xTaskCreatePinnedToCore(
+    taskCore0,     // Function
+    "Task0",       // Name
+    10000,         // Stack size
+    NULL,          // Parameter
+    1,             // Priority
+    &Task1,        // Task handle
+    0);            // Core 0
 
-    // Mise à jour des valeurs précédentes
-    X_prev = X;
-    Y_prev = Y;
-    Z_prev = Z;
+  xTaskCreatePinnedToCore(
+    taskCore1,
+    "Task1",
+    10000,
+    NULL,
+    1,
+    &Task2,
+    1);            // Core 1
+}
 
-
-
-
-    Serial.print(">AccelX:");
-    Serial.println(X, 3);
-    Serial.print(">AccelY:");
-    Serial.println(Y, 3);
-    Serial.print(">AccelZ:");
-    Serial.println(Z, 3);
-
-    delay(10); // Délai pour correspondre à la période d'échantillonnage de 10 ms
+void loop() {
+  // Leave empty!
 }
