@@ -7,3 +7,11 @@
 #define GYRO2_ADDR 0x69
 
 #define ABERRANT_DATA 100.0f
+
+enum CORE0_FSM {
+
+};
+
+enum CORE1_FSM {
+
+};
