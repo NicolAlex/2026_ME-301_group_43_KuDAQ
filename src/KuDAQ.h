@@ -60,8 +60,8 @@ class Sensor {
         int sensor_status;
         float firstOrder_LPF(float x, float x_prev);
         float secondOrder_LPF(float x, float x_prev1, float x_prev2);
-        float sampling_rate = 100.0f; // in Hz
-        float cutoff_freq = 10.0f; // in Hz
+        float sampling_rate; // in Hz
+        float cutoff_freq; // in Hz
         float a; // Coefficient for the low-pass filter
         float b; // Coefficient for the low-pass filter
         inline void compute_a();

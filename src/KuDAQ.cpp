@@ -32,6 +32,8 @@ Sensor::Sensor(uint8_t __accel_addr, uint8_t __gyro_addr) { // Constructor
     }
     filtered_accel_data.unacked_data = 0;
     filtered_gyro_data.unacked_data = 0;
+    sampling_rate = SAMPLING_RATE;
+    cutoff_freq = CUTOFF_FREQ;
     compute_a();
     compute_b();
 }
@@ -60,9 +62,8 @@ void Sensor::init() {
 void Sensor::aquisition() {
     if (read_data()) {
         filter_data_1stOdr();
+        //filter_data_2ndOdr();
         // test
-        Serial.print("nb unacked accel data: ");
-        Serial.println(raw_accel_data.unacked_data);
     } 
 }
 
@@ -70,8 +71,12 @@ bool Sensor::read_data() {
     // define time variable
     static unsigned long last_timestamp = 0;
     // read both accel and gyro via the bmi wrapper
+    bmi->readSensor();
+    // check if enough time has passed since the last reading based on the sampling rate
     if (micros() - last_timestamp >= 1000000 / sampling_rate) {
-        bmi->readSensor(); // readSensor() returns void, do not assign
+        #ifdef DEBUG
+        Serial.println("Reading new data from sensor...");
+        #endif
         last_timestamp = micros();
         // Move data in the buffer and add new data at the last position
         for (int i = 0; i < 9; i++) {
@@ -103,8 +108,19 @@ bool Sensor::read_data() {
         if (raw_gyro_data.unacked_data > 10) {
             raw_gyro_data.unacked_data = 10; // cap at buffer size
         }
+        #ifdef DEBUG
+        Serial.print("New data wrapped, raw unacked = ");
+        Serial.println(raw_accel_data.unacked_data);
+        Serial.print("accel_z = ");
+        Serial.print(raw_accel_data.z[9], 3);
+        Serial.print(", timestamp = ");
+        Serial.println(raw_accel_data.timestamp[9]);
+        #endif
         return true;
     }
+    #ifdef DEBUG
+    Serial.println("DO NOT READ");
+    #endif
     // else :
     // do not read data
     // do not update the buffers
@@ -125,6 +141,9 @@ float Sensor::secondOrder_LPF(float x, float x_prev1, float x_prev2) {
 }
 
 void Sensor::filter_data_1stOdr() {
+    #ifdef DEBUG
+    Serial.println("Filtering data with 1st order filter...");
+    #endif
     // Move all value by 1 position in the filtered buffers to make place for the new data
     for (int i = 0; i < 9; i++) {
         filtered_accel_data.x[i] = filtered_accel_data.x[i + 1];
@@ -150,15 +169,19 @@ void Sensor::filter_data_1stOdr() {
     filtered_gyro_data.unacked_data++;
     // overflow protection
     if (filtered_accel_data.unacked_data > 10) {
-        filtered_accel_data.unacked_data = 10; // cap at buffer size
+        filtered_accel_data.unacked_data = 10;  // cap at buffer size
     }
     if (filtered_gyro_data.unacked_data > 10) {
         filtered_gyro_data.unacked_data = 10; // cap at buffer size
     }
-
-    // test
-    Serial.print("filtered Accel X: ");
-    Serial.println(filtered_accel_data.x[9]);
+    #ifdef DEBUG
+    Serial.print("New data filtered, filtered unacked = ");
+    Serial.println(filtered_accel_data.unacked_data);
+    Serial.print("accel_z = ");
+    Serial.print(filtered_accel_data.z[9], 3);
+    Serial.print(", timestamp = ");
+    Serial.println(filtered_accel_data.timestamp[9]);
+    #endif
 }
 
 void Sensor::filter_data_2ndOdr() {
@@ -184,6 +207,15 @@ void Sensor::filter_data_2ndOdr() {
     filtered_gyro_data.z[9] = secondOrder_LPF(raw_gyro_data.z[9], filtered_gyro_data.z[8], filtered_gyro_data.z[7]);
     filtered_accel_data.timestamp[9] = raw_accel_data.timestamp[9];
     filtered_gyro_data.timestamp[9] = raw_gyro_data.timestamp[9];
+    filtered_accel_data.unacked_data++;
+    filtered_gyro_data.unacked_data++;
+    // overflow protection
+    if (filtered_accel_data.unacked_data > 10) {
+        filtered_accel_data.unacked_data = 10;  // cap at buffer size
+    }
+    if (filtered_gyro_data.unacked_data > 10) {
+        filtered_gyro_data.unacked_data = 10; // cap at buffer size
+    }
 }
 
 bool Sensor::newDataReady() {
@@ -194,7 +226,12 @@ sensor_buffer_t Sensor::getFilteredAccel() {
     // create the return structure
     sensor_buffer_t accel_data_out;
     // check if new unacked accel data is available
+    #ifdef DEBUG
+    Serial.print("Checking for new filtered accel data, unacked = ");
+    Serial.println(raw_accel_data.unacked_data);
+    #endif
     if (filtered_accel_data.unacked_data <= 0) {
+        delay(1); // for debug
         // If no new data available, return the error value =100
         accel_data_out.xyz_buffer = {30.0f, 30.0f, 30.0f};
         accel_data_out.timestamp = 0;
@@ -207,6 +244,18 @@ sensor_buffer_t Sensor::getFilteredAccel() {
                                  filtered_accel_data.z[10 - filtered_accel_data.unacked_data]};
     accel_data_out.timestamp = filtered_accel_data.timestamp[10 - filtered_accel_data.unacked_data];
     accel_data_out.newData = true;
+    filtered_accel_data.unacked_data--; // Mark this data as acknowledged
+    raw_accel_data.unacked_data = filtered_accel_data.unacked_data; // Sync the unacked data
+    #ifdef DEBUG
+    Serial.print("Returning filtered accel data, unacked = ");
+    Serial.println(filtered_accel_data.unacked_data);
+    Serial.print("newData = ");
+    Serial.println(accel_data_out.newData);
+    Serial.print("accel_z = ");
+    Serial.print(accel_data_out.xyz_buffer[2], 3);
+    Serial.print(", timestamp = ");
+    Serial.println(accel_data_out.timestamp);
+    #endif
     return accel_data_out;
 }
 
@@ -227,6 +276,8 @@ sensor_buffer_t Sensor::getFilteredGyro() {
                                  filtered_gyro_data.z[10 - filtered_gyro_data.unacked_data]};
     gyro_data_out.timestamp = filtered_gyro_data.timestamp[10 - filtered_gyro_data.unacked_data];
     gyro_data_out.newData = true;
+    filtered_gyro_data.unacked_data--; // Mark this data as acknowledged
+    raw_gyro_data.unacked_data = filtered_gyro_data.unacked_data; // Sync the unacked data
     return gyro_data_out;
 }
 

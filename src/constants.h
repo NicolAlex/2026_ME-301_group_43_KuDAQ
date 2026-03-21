@@ -8,6 +8,11 @@
 
 #define ABERRANT_DATA 100.0f
 
+#define SAMPLING_RATE 200.0f // in Hz
+#define CUTOFF_FREQ 5.0f // in Hz
+
+//#define DEBUG
+
 enum CORE0_FSM {
 
 };
