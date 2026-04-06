@@ -8,6 +8,10 @@ Sensor::Sensor(uint8_t __accel_addr, uint8_t __gyro_addr) { // Constructor
     sensor_status = 0;
     a = 0.0f;
     b = 0.0f;
+    raw_accel_data.index = 0;
+    raw_gyro_data.index = 0;
+    filtered_accel_data.index = 0;
+    filtered_gyro_data.index = 0;
     for (int i = 0; i < 10; i++) {
         raw_accel_data.x[i] = 0.0f;
         raw_accel_data.y[i] = 0.0f;
@@ -78,26 +82,18 @@ bool Sensor::read_data() {
         Serial.println("Reading new data from sensor...");
         #endif
         last_timestamp = micros();
-        // Move data in the buffer and add new data at the last position
-        for (int i = 0; i < 9; i++) {
-            raw_accel_data.x[i] = raw_accel_data.x[i + 1];
-            raw_accel_data.y[i] = raw_accel_data.y[i + 1];
-            raw_accel_data.z[i] = raw_accel_data.z[i + 1];
-            raw_gyro_data.x[i] = raw_gyro_data.x[i + 1];
-            raw_gyro_data.y[i] = raw_gyro_data.y[i + 1];
-            raw_gyro_data.z[i] = raw_gyro_data.z[i + 1];
-            raw_accel_data.timestamp[i] = raw_accel_data.timestamp[i + 1];
-            raw_gyro_data.timestamp[i] = raw_gyro_data.timestamp[i + 1];
-        }
+        // Move data in the  circular buffer to make place for the new data
+        raw_accel_data.index = (raw_accel_data.index + 1) % 10; // circular buffer index
+        raw_gyro_data.index = (raw_gyro_data.index + 1) % 10; // circular buffer index
         // Add new data at the last position
-        raw_accel_data.x[9] = bmi->getAccelX_mss();
-        raw_accel_data.y[9] = bmi->getAccelY_mss();
-        raw_accel_data.z[9] = bmi->getAccelZ_mss();
-        raw_gyro_data.x[9] = bmi->getGyroX_rads();
-        raw_gyro_data.y[9] = bmi->getGyroY_rads();
-        raw_gyro_data.z[9] = bmi->getGyroZ_rads();
-        raw_accel_data.timestamp[9] = last_timestamp;
-        raw_gyro_data.timestamp[9] = last_timestamp;
+        raw_accel_data.x[raw_accel_data.index] = bmi->getAccelX_mss();
+        raw_accel_data.y[raw_accel_data.index] = bmi->getAccelY_mss();
+        raw_accel_data.z[raw_accel_data.index] = bmi->getAccelZ_mss();
+        raw_gyro_data.x[raw_gyro_data.index] = bmi->getGyroX_rads();
+        raw_gyro_data.y[raw_gyro_data.index] = bmi->getGyroY_rads();
+        raw_gyro_data.z[raw_gyro_data.index] = bmi->getGyroZ_rads();
+        raw_accel_data.timestamp[raw_accel_data.index] = last_timestamp;
+        raw_gyro_data.timestamp[raw_gyro_data.index] = last_timestamp;
         // increment the unacknowledged new data index
         raw_accel_data.unacked_data++;
         raw_gyro_data.unacked_data++;
@@ -145,26 +141,27 @@ void Sensor::filter_data_1stOdr() {
     Serial.println("Filtering data with 1st order filter...");
     #endif
     // Move all value by 1 position in the filtered buffers to make place for the new data
-    for (int i = 0; i < 9; i++) {
-        filtered_accel_data.x[i] = filtered_accel_data.x[i + 1];
-        filtered_accel_data.y[i] = filtered_accel_data.y[i + 1];
-        filtered_accel_data.z[i] = filtered_accel_data.z[i + 1];
-        filtered_gyro_data.x[i] = filtered_gyro_data.x[i + 1];
-        filtered_gyro_data.y[i] = filtered_gyro_data.y[i + 1];
-        filtered_gyro_data.z[i] = filtered_gyro_data.z[i + 1];
-        filtered_accel_data.timestamp[i] = filtered_accel_data.timestamp[i + 1];
-        filtered_gyro_data.timestamp[i] = filtered_gyro_data.timestamp[i + 1];
-    }
-
+    filtered_accel_data.index = (filtered_accel_data.index + 1) % 10; // circular buffer index
+    filtered_gyro_data.index = (filtered_gyro_data.index + 1) % 10; // circular buffer index
     // apply the first order filter to the new data and store in the filtered buffers
-    filtered_accel_data.x[9] = firstOrder_LPF(raw_accel_data.x[9], filtered_accel_data.x[8]);
-    filtered_accel_data.y[9] = firstOrder_LPF(raw_accel_data.y[9], filtered_accel_data.y[8]);
-    filtered_accel_data.z[9] = firstOrder_LPF(raw_accel_data.z[9], filtered_accel_data.z[8]);
-    filtered_gyro_data.x[9] = firstOrder_LPF(raw_gyro_data.x[9], filtered_gyro_data.x[8]);  
-    filtered_gyro_data.y[9] = firstOrder_LPF(raw_gyro_data.y[9], filtered_gyro_data.y[8]);
-    filtered_gyro_data.z[9] = firstOrder_LPF(raw_gyro_data.z[9], filtered_gyro_data.z[8]);
-    filtered_accel_data.timestamp[9] = raw_accel_data.timestamp[9];
-    filtered_gyro_data.timestamp[9] = raw_gyro_data.timestamp[9];
+    if (filtered_accel_data.index == 0) {
+        filtered_accel_data.x[filtered_accel_data.index] = firstOrder_LPF(raw_accel_data.x[raw_accel_data.index], filtered_accel_data.x[9]);
+        filtered_accel_data.y[filtered_accel_data.index] = firstOrder_LPF(raw_accel_data.y[raw_accel_data.index], filtered_accel_data.y[9]);
+        filtered_accel_data.z[filtered_accel_data.index] = firstOrder_LPF(raw_accel_data.z[raw_accel_data.index], filtered_accel_data.z[9]);
+        filtered_gyro_data.x[filtered_gyro_data.index] = firstOrder_LPF(raw_gyro_data.x[raw_gyro_data.index], filtered_gyro_data.x[9]);
+        filtered_gyro_data.y[filtered_gyro_data.index] = firstOrder_LPF(raw_gyro_data.y[raw_gyro_data.index], filtered_gyro_data.y[9]);
+        filtered_gyro_data.z[filtered_gyro_data.index] = firstOrder_LPF(raw_gyro_data.z[raw_gyro_data.index], filtered_gyro_data.z[9]);
+    } else {
+        filtered_accel_data.x[filtered_accel_data.index] = firstOrder_LPF(raw_accel_data.x[raw_accel_data.index], filtered_accel_data.x[filtered_accel_data.index - 1]);
+        filtered_accel_data.y[filtered_accel_data.index] = firstOrder_LPF(raw_accel_data.y[raw_accel_data.index], filtered_accel_data.y[filtered_accel_data.index - 1]);
+        filtered_accel_data.z[filtered_accel_data.index] = firstOrder_LPF(raw_accel_data.z[raw_accel_data.index], filtered_accel_data.z[filtered_accel_data.index - 1]);
+        filtered_gyro_data.x[filtered_gyro_data.index] = firstOrder_LPF(raw_gyro_data.x[raw_gyro_data.index], filtered_gyro_data.x[filtered_gyro_data.index - 1]);
+        filtered_gyro_data.y[filtered_gyro_data.index] = firstOrder_LPF(raw_gyro_data.y[raw_gyro_data.index], filtered_gyro_data.y[filtered_gyro_data.index - 1]);
+        filtered_gyro_data.z[filtered_gyro_data.index] = firstOrder_LPF(raw_gyro_data.z[raw_gyro_data.index], filtered_gyro_data.z[filtered_gyro_data.index - 1]);
+    }
+    filtered_accel_data.timestamp[filtered_accel_data.index] = raw_accel_data.timestamp[raw_accel_data.index];
+    filtered_gyro_data.timestamp[filtered_gyro_data.index] = raw_gyro_data.timestamp[raw_gyro_data.index];
+
     filtered_accel_data.unacked_data++;
     filtered_gyro_data.unacked_data++;
     // overflow protection
@@ -187,26 +184,33 @@ void Sensor::filter_data_1stOdr() {
 void Sensor::filter_data_2ndOdr() {
   // same as above, but 2nd order filtering
   // Move all value by 1 position in the filtered buffers to make place for the new data
-    for (int i = 0; i < 9; i++) {
-        filtered_accel_data.x[i] = filtered_accel_data.x[i + 1];
-        filtered_accel_data.y[i] = filtered_accel_data.y[i + 1];
-        filtered_accel_data.z[i] = filtered_accel_data.z[i + 1];
-        filtered_gyro_data.x[i] = filtered_gyro_data.x[i + 1];
-        filtered_gyro_data.y[i] = filtered_gyro_data.y[i + 1];
-        filtered_gyro_data.z[i] = filtered_gyro_data.z[i + 1];
-        filtered_accel_data.timestamp[i] = filtered_accel_data.timestamp[i + 1];
-        filtered_gyro_data.timestamp[i] = filtered_gyro_data.timestamp[i + 1];
-    }
-
+    filtered_accel_data.index = (filtered_accel_data.index + 1) % 10; // circular buffer index
+    filtered_gyro_data.index = (filtered_gyro_data.index + 1) % 10; // circular buffer index
     // apply the second order filter to the new data and store in the filtered buffers
-    filtered_accel_data.x[9] = secondOrder_LPF(raw_accel_data.x[9], filtered_accel_data.x[8], filtered_accel_data.x[7]);
-    filtered_accel_data.y[9] = secondOrder_LPF(raw_accel_data.y[9], filtered_accel_data.y[8], filtered_accel_data.y[7]);
-    filtered_accel_data.z[9] = secondOrder_LPF(raw_accel_data.z[9], filtered_accel_data.z[8], filtered_accel_data.z[7]);
-    filtered_gyro_data.x[9] = secondOrder_LPF(raw_gyro_data.x[9], filtered_gyro_data.x[8], filtered_gyro_data.x[7]);
-    filtered_gyro_data.y[9] = secondOrder_LPF(raw_gyro_data.y[9], filtered_gyro_data.y[8], filtered_gyro_data.y[7]);
-    filtered_gyro_data.z[9] = secondOrder_LPF(raw_gyro_data.z[9], filtered_gyro_data.z[8], filtered_gyro_data.z[7]);
-    filtered_accel_data.timestamp[9] = raw_accel_data.timestamp[9];
-    filtered_gyro_data.timestamp[9] = raw_gyro_data.timestamp[9];
+    if (filtered_accel_data.index == 0) {
+        filtered_accel_data.x[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.x[raw_accel_data.index], filtered_accel_data.x[9], filtered_accel_data.x[8]);
+        filtered_accel_data.y[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.y[raw_accel_data.index], filtered_accel_data.y[9], filtered_accel_data.y[8]);
+        filtered_accel_data.z[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.z[raw_accel_data.index], filtered_accel_data.z[9], filtered_accel_data.z[8]);
+        filtered_gyro_data.x[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.x[raw_gyro_data.index], filtered_gyro_data.x[9], filtered_gyro_data.x[8]);
+        filtered_gyro_data.y[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.y[raw_gyro_data.index], filtered_gyro_data.y[9], filtered_gyro_data.y[8]);
+        filtered_gyro_data.z[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.z[raw_gyro_data.index], filtered_gyro_data.z[9], filtered_gyro_data.z[8]);
+    } else if (filtered_accel_data.index == 1) {
+        filtered_accel_data.x[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.x[raw_accel_data.index], filtered_accel_data.x[0], filtered_accel_data.x[9]);
+        filtered_accel_data.y[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.y[raw_accel_data.index], filtered_accel_data.y[0], filtered_accel_data.y[9]);
+        filtered_accel_data.z[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.z[raw_accel_data.index], filtered_accel_data.z[0], filtered_accel_data.z[9]);
+        filtered_gyro_data.x[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.x[raw_gyro_data.index], filtered_gyro_data.x[0], filtered_gyro_data.x[9]);
+        filtered_gyro_data.y[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.y[raw_gyro_data.index], filtered_gyro_data.y[0], filtered_gyro_data.y[9]);
+        filtered_gyro_data.z[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.z[raw_gyro_data.index], filtered_gyro_data.z[0], filtered_gyro_data.z[9]);
+    } else {
+        filtered_accel_data.x[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.x[raw_accel_data.index], filtered_accel_data.x[filtered_accel_data.index - 1], filtered_accel_data.x[filtered_accel_data.index - 2]);
+        filtered_accel_data.y[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.y[raw_accel_data.index], filtered_accel_data.y[filtered_accel_data.index - 1], filtered_accel_data.y[filtered_accel_data.index - 2]);
+        filtered_accel_data.z[filtered_accel_data.index] = secondOrder_LPF(raw_accel_data.z[raw_accel_data.index], filtered_accel_data.z[filtered_accel_data.index - 1], filtered_accel_data.z[filtered_accel_data.index - 2]);
+        filtered_gyro_data.x[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.x[raw_gyro_data.index], filtered_gyro_data.x[filtered_gyro_data.index - 1], filtered_gyro_data.x[filtered_gyro_data.index - 2]);
+        filtered_gyro_data.y[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.y[raw_gyro_data.index], filtered_gyro_data.y[filtered_gyro_data.index - 1], filtered_gyro_data.y[filtered_gyro_data.index - 2]);
+        filtered_gyro_data.z[filtered_gyro_data.index] = secondOrder_LPF(raw_gyro_data.z[raw_gyro_data.index], filtered_gyro_data.z[filtered_gyro_data.index - 1], filtered_gyro_data.z[filtered_gyro_data.index - 2]);
+    }
+    filtered_accel_data.timestamp[filtered_accel_data.index] = raw_accel_data.timestamp[raw_accel_data.index];
+    filtered_gyro_data.timestamp[filtered_gyro_data.index] = raw_gyro_data.timestamp[raw_gyro_data.index];
     filtered_accel_data.unacked_data++;
     filtered_gyro_data.unacked_data++;
     // overflow protection
@@ -239,10 +243,10 @@ sensor_buffer_t Sensor::getFilteredAccel() {
         return accel_data_out;
     }
     // If new data is available, return the last filtered data and timestamp
-    accel_data_out.xyz_buffer = {filtered_accel_data.x[10 - filtered_accel_data.unacked_data], 
-                                 filtered_accel_data.y[10 - filtered_accel_data.unacked_data],
-                                 filtered_accel_data.z[10 - filtered_accel_data.unacked_data]};
-    accel_data_out.timestamp = filtered_accel_data.timestamp[10 - filtered_accel_data.unacked_data];
+    accel_data_out.xyz_buffer = {filtered_accel_data.x[(filtered_accel_data.index + 1 - filtered_accel_data.unacked_data + 10) % 10], 
+                                 filtered_accel_data.y[(filtered_accel_data.index + 1 - filtered_accel_data.unacked_data + 10) % 10],
+                                 filtered_accel_data.z[(filtered_accel_data.index + 1 - filtered_accel_data.unacked_data + 10) % 10]};
+    accel_data_out.timestamp = filtered_accel_data.timestamp[(filtered_accel_data.index + 1 - filtered_accel_data.unacked_data + 10) % 10];
     accel_data_out.newData = true;
     filtered_accel_data.unacked_data--; // Mark this data as acknowledged
     raw_accel_data.unacked_data = filtered_accel_data.unacked_data; // Sync the unacked data
@@ -271,10 +275,10 @@ sensor_buffer_t Sensor::getFilteredGyro() {
         return gyro_data_out;
     }
     // If new data is available, return the last filtered data and timestamp
-    gyro_data_out.xyz_buffer = {filtered_gyro_data.x[10 - filtered_gyro_data.unacked_data], 
-                                 filtered_gyro_data.y[10 - filtered_gyro_data.unacked_data],
-                                 filtered_gyro_data.z[10 - filtered_gyro_data.unacked_data]};
-    gyro_data_out.timestamp = filtered_gyro_data.timestamp[10 - filtered_gyro_data.unacked_data];
+    gyro_data_out.xyz_buffer = {filtered_gyro_data.x[(filtered_gyro_data.index + 1 - filtered_gyro_data.unacked_data + 10) % 10], 
+                                 filtered_gyro_data.y[(filtered_gyro_data.index + 1 - filtered_gyro_data.unacked_data + 10) % 10],
+                                 filtered_gyro_data.z[(filtered_gyro_data.index + 1 - filtered_gyro_data.unacked_data + 10) % 10]};
+    gyro_data_out.timestamp = filtered_gyro_data.timestamp[(filtered_gyro_data.index + 1 - filtered_gyro_data.unacked_data + 10) % 10];
     gyro_data_out.newData = true;
     filtered_gyro_data.unacked_data--; // Mark this data as acknowledged
     raw_gyro_data.unacked_data = filtered_gyro_data.unacked_data; // Sync the unacked data

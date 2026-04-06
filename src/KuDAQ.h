@@ -8,10 +8,12 @@
 #include "constants.h"
 
 typedef struct sensor_data_t { // stores 10 samples of data for filtering purposes
+    int index = 0; // index for circular buffer
     float x[10];
     float y[10];
     float z[10];
     unsigned long timestamp[10];
+
     int unacked_data;
 } sensor_data_t;
 
