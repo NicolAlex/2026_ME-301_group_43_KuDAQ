@@ -13,11 +13,11 @@ TaskHandle_t Task2;
 Sensor sensor1(ACCEL1_ADDR, GYRO1_ADDR);
 Sensor sensor2(ACCEL2_ADDR, GYRO2_ADDR);
 
-// Queue used to pass accel samples safely from core 0 to core 1
-QueueHandle_t accelQueue = nullptr;
+// Queue used to pass orientation samples safely from core 0 to core 1
+QueueHandle_t orientationQueue = nullptr;
 
 // WiFi credentials
-const char* ssid = "ESP32_NET"; // IP : 192.168.4.1
+const char* ssid = "KuDAQ_stream"; // IP : 192.168.4.1
 const char* password = "12345678";
 
 // Wifi server creation
@@ -28,14 +28,14 @@ WiFiClient client;
 void taskCore0(void * parameter) { // SENSOR READING THREAD
   for(;;) {
     // variable definiton
-    static sensor_buffer_t accel1_sender;
+    static orientation_buffer_t orientation1_sender;
     // data acquisition and processing
     sensor1.aquisition();
-    accel1_sender = sensor1.getFilteredAccel();
+    orientation1_sender = sensor1.getRawOrientation();
     // send only if there's new data
-    if (accel1_sender.newData) {
-      // enqueue, do not block long (0 ticks)
-      xQueueOverwrite(accelQueue, &accel1_sender);
+    if (orientation1_sender.newData) {
+      // For now, send orientation data over the queue (instead of accel) for testing
+      xQueueOverwrite(orientationQueue, &orientation1_sender);
     }
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -44,7 +44,7 @@ void taskCore0(void * parameter) { // SENSOR READING THREAD
 void taskCore1(void * parameter) { // EXTERNAL COMMUNICATION THREAD
   for(;;) {
     // variable definition
-    static sensor_buffer_t accel1_receiver;
+    static orientation_buffer_t orientation1_receiver;
     static unsigned long last_wifi_send_ms = 0;
     static int wifi_send_counter = 0;
     // WiFi client handling
@@ -52,17 +52,15 @@ void taskCore1(void * parameter) { // EXTERNAL COMMUNICATION THREAD
       client = server.available();
     }
     // wait up to 100 ms for data
-    if (xQueueReceive(accelQueue, &accel1_receiver, pdMS_TO_TICKS(0)) == pdTRUE) {
+    if (xQueueReceive(orientationQueue, &orientation1_receiver, pdMS_TO_TICKS(100)) == pdTRUE) {
 
         if (client && client.connected()) {
-            client.print("TIMESTAMP:");
-            client.println(accel1_receiver.timestamp); // microsecond timestamp
-            client.print("ACCEL_X:");
-            client.println(accel1_receiver.xyz_buffer[0], 3);
-            client.print("ACCEL_Y:");
-            client.println(accel1_receiver.xyz_buffer[1], 3);
-            client.print("ACCEL_Z:");
-            client.println(accel1_receiver.xyz_buffer[2], 3);
+            client.print("PITCH:");
+            client.println(orientation1_receiver.rpy_buffer[0], 3);
+            client.print("ROLL:");
+            client.println(orientation1_receiver.rpy_buffer[1], 3);
+            client.print("YAW:");
+            client.println(orientation1_receiver.rpy_buffer[2], 3);
             //Serial.println("send data over wifi !");
 
             // sending frequency counter (for debug)
@@ -75,23 +73,17 @@ void taskCore1(void * parameter) { // EXTERNAL COMMUNICATION THREAD
                 wifi_send_counter = 0;
             }
           }
-        else {
-          Serial.println("no client");
-        }
 
-      #ifdef DEBUG
+      #ifdef SERIAL_STREAM
       // Optional USB debug output.
-      Serial.print(">accel_x:");
-      Serial.println(accel1_receiver.xyz_buffer[0], 3);
-      Serial.print(">accel_y:");
-      Serial.println(accel1_receiver.xyz_buffer[1], 3);
-      Serial.print(">accel_z:");
-      Serial.println(accel1_receiver.xyz_buffer[2], 3);
+      Serial.print("Pitch : ");
+      Serial.println(orientation1_receiver.rpy_buffer[0], 3);
+      Serial.print("Roll : ");
+      Serial.println(orientation1_receiver.rpy_buffer[1], 3);
+      Serial.print("Yaw : ");
+      Serial.println(orientation1_receiver.rpy_buffer[2], 3);
+      Serial.println("---------------------------------------------------------------------------------");
       #endif
-    } else {
-    #ifdef DEBUG
-          Serial.println("No new data available.");
-    #endif
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -118,9 +110,9 @@ void setup() {
   delay(100); // wait for sensors to initialize
 
   // create queue to pass 1 sensor sample bwteen cores
-  accelQueue = xQueueCreate(1, sizeof(sensor_buffer_t));
-  if (accelQueue == NULL) {
-    Serial.println("Failed to create accel queue!");
+  orientationQueue = xQueueCreate(1, sizeof(orientation_buffer_t));
+  if (orientationQueue == NULL) {
+    Serial.println("Failed to create orientation queue!");
     while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 

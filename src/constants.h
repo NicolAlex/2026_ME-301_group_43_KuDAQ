@@ -12,6 +12,7 @@
 #define CUTOFF_FREQ 5.0f // in Hz
 
 //#define DEBUG
+//#define SERIAL_STREAM
 
 enum CORE0_FSM {
 

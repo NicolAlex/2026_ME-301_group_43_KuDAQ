@@ -1,4 +1,5 @@
 #include "KuDAQ.h"
+// --- CONSTRUCTOR AND DESTRUCTOR ---
 
 Sensor::Sensor(uint8_t __accel_addr, uint8_t __gyro_addr) { // Constructor
     // Set I2C addresses
@@ -49,10 +50,13 @@ Sensor::~Sensor() { // Destructor
     }
 }
 
+// --- GENERAL METHODS ---
+
 void Sensor::init() {
     // Initialize the bmi sensor inside of setup()
     // create BMI088 wrapper instance (uses Wire)
     bmi = new Bmi088(Wire, accel_addr, gyro_addr);
+    ahrs = new Madgwick();
     // Initialize the sensors
     sensor_status = bmi->begin();
     if (sensor_status < 0) {
@@ -61,11 +65,14 @@ void Sensor::init() {
             delay(1000);
         }
     }
+    // initialize the AHRS filter
+    ahrs->begin(sampling_rate);
 }
 
 void Sensor::aquisition() {
     if (read_data()) {
         filter_data_1stOdr();
+        AHRS_update();
         //filter_data_2ndOdr();
         // test
     } 
@@ -226,6 +233,24 @@ bool Sensor::newDataReady() {
     return (raw_accel_data.unacked_data > 0) || (raw_gyro_data.unacked_data > 0);
 }
 
+void Sensor::AHRS_update() {
+    // Move all value by 1 position in the orientation buffers to make place for the new data
+    raw_orientation_data.index = (raw_orientation_data.index + 1) % 10; // circular buffer index
+    // apply the AHRS filter to the new data and store in the orientation buffers
+    ahrs->updateIMU(raw_gyro_data.x[raw_gyro_data.index], raw_gyro_data.y[raw_gyro_data.index], raw_gyro_data.z[raw_gyro_data.index],
+                 raw_accel_data.x[raw_accel_data.index], raw_accel_data.y[raw_accel_data.index], raw_accel_data.z[raw_accel_data.index]);
+    raw_orientation_data.roll[raw_orientation_data.index] = ahrs->getRoll();
+    raw_orientation_data.pitch[raw_orientation_data.index] = ahrs->getPitch();
+    raw_orientation_data.yaw[raw_orientation_data.index] = ahrs->getYaw();
+    raw_orientation_data.timestamp[raw_orientation_data.index] = (long)((raw_accel_data.timestamp[raw_accel_data.index] + raw_gyro_data.timestamp[raw_gyro_data.index]) / 2); // average timestamp
+    raw_orientation_data.unacked_data++;
+    if (raw_orientation_data.unacked_data > 10) {
+        raw_orientation_data.unacked_data = 10; // cap at buffer size
+    }
+}
+
+// --- GETTERS ---
+
 sensor_buffer_t Sensor::getFilteredAccel() {
     // create the return structure
     sensor_buffer_t accel_data_out;
@@ -285,6 +310,27 @@ sensor_buffer_t Sensor::getFilteredGyro() {
     return gyro_data_out;
 }
 
+orientation_buffer_t Sensor::getRawOrientation() {
+    // create the return structure
+    orientation_buffer_t orientation_data_out;
+    // check if new unacked orientation data is available
+    if (!raw_orientation_data.unacked_data) {
+        // If no new data available, return the error value =100
+        orientation_data_out.rpy_buffer = {0.0f, 0.0f, 0.0f};
+        orientation_data_out.timestamp = 0;
+        orientation_data_out.newData = false;
+        return orientation_data_out;
+    }
+    // If new data is available, return the last orientation data and timestamp
+    orientation_data_out.rpy_buffer = {raw_orientation_data.roll[(raw_orientation_data.index + 1 - raw_orientation_data.unacked_data + 10) % 10], 
+                                      raw_orientation_data.pitch[(raw_orientation_data.index + 1 - raw_orientation_data.unacked_data + 10) % 10],
+                                      raw_orientation_data.yaw[(raw_orientation_data.index + 1 - raw_orientation_data.unacked_data + 10) % 10]};
+    orientation_data_out.timestamp = raw_orientation_data.timestamp[(raw_orientation_data.index + 1 - raw_orientation_data.unacked_data + 10) % 10];
+    orientation_data_out.newData = true;
+    raw_orientation_data.unacked_data--; // Mark this data as acknowledged
+    return orientation_data_out;
+}
+
 int Sensor::getUnackedAccelRaw() {
     return raw_accel_data.unacked_data;
 }
@@ -300,6 +346,8 @@ int Sensor::getUnackedAccelFiltered() {
 int Sensor::getUnackedGyroFiltered() {
     return filtered_gyro_data.unacked_data;
 }
+
+// --- SETTERS ---
 
 void Sensor::setCutoffFreq(float fc) {
     if (fc <= 0.0f || fc >= sampling_rate / 2.0f) {
@@ -321,6 +369,8 @@ void Sensor::setSamplingRate(float fs) {
     compute_b();
 }
 
+// --- INLINE FUNCTIONS ---
+
 inline void Sensor::compute_a() {
     // Compute coefficient a based on cutoff frequency and sampling rate
     float fc = cutoff_freq;
@@ -335,3 +385,4 @@ inline void Sensor::compute_b() {
     b = 1.0f - exp(-2.0f * M_PI * fc / fs);
 }
 
+// --- NON-CLASS FUNCTIONS ---
