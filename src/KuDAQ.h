@@ -7,6 +7,9 @@
 #include <vector>
 #include <string>
 #include "constants.h"
+#include <WiFi.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
 typedef struct sensor_data_t { // stores 10 samples of data for filtering purposes
     int index = 0; // index for circular buffer
@@ -47,7 +50,6 @@ class Sensor {
         ~Sensor();
         void init();
         void aquisition();
-        bool newDataReady();
         sensor_buffer_t getFilteredAccel();
         sensor_buffer_t getFilteredGyro();
         orientation_buffer_t getRawOrientation();
@@ -90,15 +92,30 @@ class Sensor {
         inline void compute_a();
         inline void compute_b();
 };
-/*class KuDAQ {
+class KuDAQ {
     public:
         KuDAQ();
         ~KuDAQ();
+        void initialize_all();
         void updateCore0();
         void updateCore1();
 
     private:
+        // Private methods
+        void WiFi_setup();
         void getData();
+        std::vector<std::string> readMessage();
+        // Private members
+        Sensor *sensor1 = nullptr;
+        Sensor *sensor2 = nullptr;
+        QueueHandle_t orientationQueue = nullptr;
+        QueueHandle_t com_0to1 = nullptr;
+        QueueHandle_t com_1to0 = nullptr;
+        // Private variables
+        const char* ssid = "KuDAQ_stream"; // IP : 192.168.4.1
+        const char* password = "12345678";
 
-};*/
+
+
+};
     

@@ -1,9 +1,5 @@
 #include <Arduino.h>
 #include "KuDAQ.h"
-// FreeRTOS queue for safe inter-core data transfer
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
-#include <WiFi.h>
 
 // mutlicore
 TaskHandle_t Task1;
@@ -36,8 +32,22 @@ void taskCore0(void * parameter) { // SENSOR READING THREAD
     if (orientation1_sender.newData) {
       // For now, send orientation data over the queue (instead of accel) for testing
       xQueueOverwrite(orientationQueue, &orientation1_sender);
+      orientation1_sender.newData = false; // Mark data as sent
+
+      // compute and send aquisition frequency
+      static unsigned long last_acquisition_ms = 0;
+      static int acquisition_counter = 0;
+      acquisition_counter++;
+      if (millis() - last_acquisition_ms >= 1000) {
+          last_acquisition_ms = millis();
+          Serial.print("Acquisition frequency: ");
+          Serial.println(acquisition_counter);
+          acquisition_counter = 0;
+      }
+
     }
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //vTaskDelay(1 / portTICK_PERIOD_MS);
+    
   }
 }
 
@@ -85,7 +95,7 @@ void taskCore1(void * parameter) { // EXTERNAL COMMUNICATION THREAD
       Serial.println("---------------------------------------------------------------------------------");
       #endif
     }
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

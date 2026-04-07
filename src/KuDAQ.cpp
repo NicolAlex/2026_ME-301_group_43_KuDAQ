@@ -1,4 +1,10 @@
 #include "KuDAQ.h"
+
+WiFiServer server(23);
+WiFiClient client;
+
+// --> --> --> CLASS SENSOR <-- <-- <--
+
 // --- CONSTRUCTOR AND DESTRUCTOR ---
 
 Sensor::Sensor(uint8_t __accel_addr, uint8_t __gyro_addr) { // Constructor
@@ -229,10 +235,6 @@ void Sensor::filter_data_2ndOdr() {
     }
 }
 
-bool Sensor::newDataReady() {
-    return (raw_accel_data.unacked_data > 0) || (raw_gyro_data.unacked_data > 0);
-}
-
 void Sensor::AHRS_update() {
     // Move all value by 1 position in the orientation buffers to make place for the new data
     raw_orientation_data.index = (raw_orientation_data.index + 1) % 10; // circular buffer index
@@ -315,9 +317,7 @@ orientation_buffer_t Sensor::getRawOrientation() {
     orientation_buffer_t orientation_data_out;
     // check if new unacked orientation data is available
     if (!raw_orientation_data.unacked_data) {
-        // If no new data available, return the error value =100
-        orientation_data_out.rpy_buffer = {0.0f, 0.0f, 0.0f};
-        orientation_data_out.timestamp = 0;
+        // If no new data available, set flag to false
         orientation_data_out.newData = false;
         return orientation_data_out;
     }
@@ -386,3 +386,86 @@ inline void Sensor::compute_b() {
 }
 
 // --- NON-CLASS FUNCTIONS ---
+
+// --> --> --> CLASS KuDAQ <-- <-- <--
+
+// --- CONSTRUCTOR AND DESTRUCTOR ---
+
+// --- GENERAL METHODS ---
+
+void KuDAQ::initialize_all() {
+    // Serial setup
+    Serial.begin(115200);
+    delay(100);
+
+    // WiFi setup
+    WiFi_setup();
+
+    // Sensor setup
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); // I2C initialization
+    sensor1->init();
+    sensor2->init();
+    delay(100);
+
+    // Queue setup
+    orientationQueue = xQueueCreate(1, sizeof(orientation_buffer_t));
+    if (orientationQueue == NULL) {
+        Serial.println("Failed to create orientation queue!");
+        while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+void KuDAQ::WiFi_setup() {
+    // WiFi connection setup
+    WiFi.softAP(ssid, password); // Start WiFi in Access Point mode with given SSID and password
+    Serial.println("Access Point started!");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.softAPIP());  // usually 192.168.4.1
+    server.begin(); // Start the TCP server on port 23
+    delay(100); // wait for WiFi to initialize
+}
+
+std::vector<std::string> KuDAQ::readMessage() {
+    // Read a full line from the TCP stream, then split into max 3 tokens.
+    static std::string rx_buffer;
+    std::vector<std::string> parsed_message;
+
+    if (!client || !client.connected()) {
+        return parsed_message;
+    }
+
+    while (client.available() > 0) {
+        char c = static_cast<char>(client.read());
+        if (c == '\r') {
+            continue;
+        }
+        if (c == '\n') {
+            break;
+        }
+        rx_buffer.push_back(c);
+    }
+
+    if (rx_buffer.empty()) {
+        return parsed_message;
+    }
+
+    // Parse command and up to 2 arguments.
+    size_t pos = 0;
+    while (pos < rx_buffer.size() && parsed_message.size() < 3) {
+        while (pos < rx_buffer.size() && rx_buffer[pos] == ' ') {
+            ++pos;
+        }
+        if (pos >= rx_buffer.size()) {
+            break;
+        }
+
+        size_t start = pos;
+        while (pos < rx_buffer.size() && rx_buffer[pos] != ' ') {
+            ++pos;
+        }
+        parsed_message.push_back(rx_buffer.substr(start, pos - start));
+    }
+
+    rx_buffer.clear();
+    return parsed_message;
+}
