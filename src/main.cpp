@@ -5,22 +5,6 @@
 TaskHandle_t Task1;
 TaskHandle_t Task2;
 
-// sensor definition (create at runtime in setup to avoid construction before Arduino core inits)
-Sensor sensor1(ACCEL1_ADDR, GYRO1_ADDR);
-Sensor sensor2(ACCEL2_ADDR, GYRO2_ADDR);
-
-// Queue used to pass orientation samples safely from core 0 to core 1
-QueueHandle_t orientationQueue = nullptr;
-
-// WiFi credentials
-const char* ssid = "KuDAQ_stream"; // IP : 192.168.4.1
-const char* password = "12345678";
-
-// Wifi server creation
-WiFiServer server(23);
-WiFiClient client;
-
-
 void taskCore0(void * parameter) { // SENSOR READING THREAD
   for(;;) {
     // variable definiton
@@ -100,31 +84,7 @@ void taskCore1(void * parameter) { // EXTERNAL COMMUNICATION THREAD
 }
 
 void setup() {
-  Serial.begin(115200);
-  delay(100); // wait for serial monitor to initialize
-
-  // WiFi setup
-  WiFi.softAP(ssid, password); // Start WiFi in Access Point mode with given SSID and password
-  Serial.println("Access Point started!");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.softAPIP());  // usually 192.168.4.1
-  server.begin(); // Start the TCP server on port 23
-  delay(100); // wait for WiFi to initialize
-
-  // initialize I2C before creating sensor objects
-  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
-  // initialize sensors
-  sensor1.init();
-  sensor2.init();
-
-  delay(100); // wait for sensors to initialize
-
-  // create queue to pass 1 sensor sample bwteen cores
-  orientationQueue = xQueueCreate(1, sizeof(orientation_buffer_t));
-  if (orientationQueue == NULL) {
-    Serial.println("Failed to create orientation queue!");
-    while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
+  
 
   // Keep sensor work away from core 0, where BT stack activity is concentrated.
   xTaskCreatePinnedToCore(taskCore0, "Task0", 10000, NULL, 1, &Task1, 1); // Core 1

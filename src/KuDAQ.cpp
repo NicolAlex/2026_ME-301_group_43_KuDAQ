@@ -331,22 +331,6 @@ orientation_buffer_t Sensor::getRawOrientation() {
     return orientation_data_out;
 }
 
-int Sensor::getUnackedAccelRaw() {
-    return raw_accel_data.unacked_data;
-}
-
-int Sensor::getUnackedGyroRaw() {
-    return raw_gyro_data.unacked_data;
-}
-
-int Sensor::getUnackedAccelFiltered() {
-    return filtered_accel_data.unacked_data;
-}
-
-int Sensor::getUnackedGyroFiltered() {
-    return filtered_gyro_data.unacked_data;
-}
-
 // --- SETTERS ---
 
 void Sensor::setCutoffFreq(float fc) {
@@ -393,6 +377,93 @@ inline void Sensor::compute_b() {
 
 // --- GENERAL METHODS ---
 
+void KuDAQ::updateCore0() {
+    // Core 0 is responsible for sensor data acquisition and processing
+    // variables
+    static orientation_buffer_t orientation1_sender;
+    // FSM
+    switch(core0_state) {
+        case CORE0_IDLE :
+            // Wait for command from Core 1
+            break;
+        case CORE0_ORIENT_ACQ :
+            // Acquire orientation data from both sensors and send to Core 1
+            sensor1->aquisition();
+            orientation1_sender = sensor1->getRawOrientation();
+            // send only if there's new data
+            if (orientation1_sender.newData) {
+                // send orientation data to Core 1 via queue
+                xQueueOverwrite(orientationQueue, &orientation1_sender);
+                orientation1_sender.newData = false; // Mark data as sent
+            }
+
+            #ifdef DEBUG
+                Serial.println("running : CORE0_ORIENT_ACQ");
+            #endif
+
+            break;
+        case CORE0_ACCEL_ACQ :
+            // Acquire accel and gyro data from both sensors, filter, and send to Core 1
+            break;
+    }
+
+}
+
+void KuDAQ::core0_setupInterrupt(bool trigger) {
+    // Triggers setup state on core0 to allow state change without collision with core1
+        xQueueOverwrite(trigger_core0_setup, &trigger);
+}
+
+void KuDAQ::updateCore1() {
+    // Core 1 is responsible for communication with the client and command processing
+    // variables
+    static std::vector<std::string> message;
+    static orientation_buffer_t orientation1_receiver;
+    static bool newMessage = false;
+    static CORE1_FSM fallback_state = CORE1_IDLE; // To return to after command processing
+    // Check WiFi connection and client status
+    WiFi_wellness();
+
+    switch(core1_state) {
+        case CORE1_IDLE :
+            // Wait for client connection and commands
+            fallback_state = CORE1_IDLE; // Stay in idle if no command is being processed
+            break;
+        case CORE1_CMD_PROCESSING :
+            // Process incoming commands from the client
+            cmdHandler(message);
+            message.clear(); // Clear the message after processing
+            core1_state = fallback_state; // Return to the previous state after command processing
+            break;
+        case CORE1_ORIENT_STREAM :
+            // Stream orientation data to the client if connected
+            if (client && client.connected()) {
+                // Check if new orientation data is available from Core 0 via queue
+                if (xQueuePeek(orientationQueue, &orientation1_receiver, 0) == pdTRUE) {
+                    client.print("PITCH:");
+                    client.println(orientation1_receiver.rpy_buffer[0], 3);
+                    client.print("ROLL:");
+                    client.println(orientation1_receiver.rpy_buffer[1], 3);
+                    client.print("YAW:");
+                    client.println(orientation1_receiver.rpy_buffer[2], 3);
+                    // Mark this data as sent by clearing the queue
+                    xQueueReceive(orientationQueue, &orientation1_receiver, 0);
+                }
+            } else {
+                core1_state = CORE1_IDLE; // Return to idle if client disconnected
+            }
+            break;
+    }
+
+    // If a client is connected, read messages and process commands
+    if (client && client.connected()) {
+        message = readMessage();
+        if (!message.empty()) {
+            core1_state = CORE1_CMD_PROCESSING;
+        }
+    }
+}
+
 void KuDAQ::initialize_all() {
     // Serial setup
     Serial.begin(115200);
@@ -402,6 +473,10 @@ void KuDAQ::initialize_all() {
     WiFi_setup();
 
     // Sensor setup
+    // create sensor instances
+    sensor1 = new Sensor(ACCEL1_ADDR, GYRO1_ADDR);
+    sensor2 = new Sensor(ACCEL2_ADDR, GYRO2_ADDR);
+    // Initialize the sensors
     Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); // I2C initialization
     sensor1->init();
     sensor2->init();
@@ -413,6 +488,13 @@ void KuDAQ::initialize_all() {
         Serial.println("Failed to create orientation queue!");
         while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+
+    trigger_core0_setup = xQueueCreate(1, sizeof(bool));
+    if (trigger_core0_setup == NULL) {
+        Serial.println("Failed to create core0 setup trigger queue!");
+        while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
 }
 
 void KuDAQ::WiFi_setup() {
@@ -425,13 +507,91 @@ void KuDAQ::WiFi_setup() {
     delay(100); // wait for WiFi to initialize
 }
 
+void KuDAQ::WiFi_wellness() {
+    // check for new client connection
+    if (server.hasClient()) {
+        if (!client || !client.connected()) {
+            client = server.available();
+            Serial.println("New client connected!");
+        } else {
+            server.available().stop(); // Reject new connection if one is already active
+        }
+    }
+
+    // If connection lost for more than 2 seconds, reset client
+    static unsigned long last_connected_time = 0;
+    if (client && client.connected()) {
+        last_connected_time = millis();
+    } else {
+        if (millis() - last_connected_time > 2000) {
+            client.stop();
+            Serial.println("Client disconnected due to timeout.");
+            // Reset client to allow new connections
+            client = WiFiClient();
+        }
+    }
+
+    // Restart server if WiFi is disconnected
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi disconnected! Restarting server...");
+        server.end();
+        WiFi_setup();
+    }
+}
+
+void KuDAQ::cmdHandler(std::vector<std::string> message) {
+    // return if message is empty
+    if (message.empty()) {
+        return;
+    }
+
+    const std::string& command = message[0]; // First token is the command
+
+    if (command == "set") {
+        const std::string& param = message.size() > 1 ? message[1] : "";
+        const std::string& value = message.size() > 2 ? message[2] : "";
+
+        if (param == "cf") {
+            float new_freq = std::stof(value);
+            sensor1->setCutoffFreq(new_freq);
+            sensor2->setCutoffFreq(new_freq);
+            Serial.print("Cutoff frequency set to ");
+            Serial.println(new_freq);
+        } else if (param == "sr") {
+            float new_sr = std::stof(value);
+            sensor1->setSamplingRate(new_sr);
+            sensor2->setSamplingRate(new_sr);
+            Serial.print("Sampling rate set to ");
+            Serial.println(new_sr);
+        }
+         // Add more parameters as needed
+    }
+    else if (command == "get") {
+        const std::string& param = message.size() > 1 ? message[1] : "";
+        const std::string& value = message.size() > 2 ? message[2] : "";
+
+        if (param == "cf") {
+            float current_cf = sensor1->getCutoffFreq(); // Assuming both sensors have the same cutoff frequency
+            Serial.print("Current cutoff frequency is ");
+            Serial.println(current_cf);
+        } else if (param == "sr") {
+            float current_sr = sensor1->getSamplingRate(); // Assuming both sensors have the same sampling rate
+            Serial.print("Current sampling rate is ");
+            Serial.println(current_sr);
+        }
+         // Add more parameters as needed
+    }
+    // Add more command handling as needed
+}
+
 std::vector<std::string> KuDAQ::readMessage() {
     // Read a full line from the TCP stream, then split into max 3 tokens.
     static std::string rx_buffer;
     std::vector<std::string> parsed_message;
+    bool got_newline = false;
 
     if (!client || !client.connected()) {
-        return parsed_message;
+        return parsed_message; // Return empty if no client is connected
     }
 
     while (client.available() > 0) {
@@ -440,9 +600,15 @@ std::vector<std::string> KuDAQ::readMessage() {
             continue;
         }
         if (c == '\n') {
+            got_newline = true;
             break;
         }
         rx_buffer.push_back(c);
+    }
+
+    // Return only when a full line has been received.
+    if (!got_newline) {
+        return parsed_message;
     }
 
     if (rx_buffer.empty()) {

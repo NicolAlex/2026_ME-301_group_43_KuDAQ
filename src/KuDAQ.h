@@ -54,10 +54,8 @@ class Sensor {
         sensor_buffer_t getFilteredGyro();
         orientation_buffer_t getRawOrientation();
         orientation_buffer_t getFilteredOrientation();
-        int getUnackedAccelRaw();
-        int getUnackedGyroRaw();
-        int getUnackedAccelFiltered();
-        int getUnackedGyroFiltered();
+        float getSamplingRate() { return sampling_rate; }
+        float getCutoffFreq() { return cutoff_freq; }
         void setCutoffFreq(float fc);
         void setSamplingRate(float fs);
 
@@ -103,14 +101,17 @@ class KuDAQ {
     private:
         // Private methods
         void WiFi_setup();
-        void getData();
+        void WiFi_wellness();
+        void core0_setupInterrupt(bool trigger);
+        void cmdHandler(std::vector<std::string> cmd_tokens);
         std::vector<std::string> readMessage();
         // Private members
+        CORE0_FSM core0_state;
+        CORE1_FSM core1_state;
         Sensor *sensor1 = nullptr;
         Sensor *sensor2 = nullptr;
         QueueHandle_t orientationQueue = nullptr;
-        QueueHandle_t com_0to1 = nullptr;
-        QueueHandle_t com_1to0 = nullptr;
+        QueueHandle_t trigger_core0_setup = nullptr;
         // Private variables
         const char* ssid = "KuDAQ_stream"; // IP : 192.168.4.1
         const char* password = "12345678";
