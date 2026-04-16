@@ -375,12 +375,47 @@ inline void Sensor::compute_b() {
 
 // --- CONSTRUCTOR AND DESTRUCTOR ---
 
+KuDAQ::KuDAQ() {
+    // Initialize variables
+    core0_state = CORE0_ORIENT_ACQ;
+    core1_state = CORE1_ORIENT_STREAM;
+
+}
+
+KuDAQ::~KuDAQ() {
+    // Clean up resources
+    if (sensor1) {
+        delete sensor1;
+        sensor1 = nullptr;
+    }
+    if (sensor2) {
+        delete sensor2;
+        sensor2 = nullptr;
+    }
+    if (core0_stateQueue) {
+        vQueueDelete(core0_stateQueue);
+        core0_stateQueue = nullptr;
+    }
+    if (orientationQueue) {
+        vQueueDelete(orientationQueue);
+        orientationQueue = nullptr;
+    }
+}
+
 // --- GENERAL METHODS ---
 
 void KuDAQ::updateCore0() {
     // Core 0 is responsible for sensor data acquisition and processing
     // variables
     static orientation_buffer_t orientation1_sender;
+    static CORE0_FSM core0_newState;
+    // Check for new state commands from Core 1 via the core0 state queue
+    if(xQueuePeek(core0_stateQueue, &core0_newState, 0) == pdTRUE) {
+        core0_state = core0_newState;
+        // Mark this state as received by clearing the queue
+        xQueueReceive(core0_stateQueue, &core0_newState, 0);
+    }
+
     // FSM
     switch(core0_state) {
         case CORE0_IDLE :
@@ -409,11 +444,6 @@ void KuDAQ::updateCore0() {
 
 }
 
-void KuDAQ::core0_setupInterrupt(bool trigger) {
-    // Triggers setup state on core0 to allow state change without collision with core1
-        xQueueOverwrite(trigger_core0_setup, &trigger);
-}
-
 void KuDAQ::updateCore1() {
     // Core 1 is responsible for communication with the client and command processing
     // variables
@@ -422,7 +452,7 @@ void KuDAQ::updateCore1() {
     static bool newMessage = false;
     static CORE1_FSM fallback_state = CORE1_IDLE; // To return to after command processing
     // Check WiFi connection and client status
-    WiFi_wellness();
+    //WiFi_wellness();
 
     switch(core1_state) {
         case CORE1_IDLE :
@@ -453,12 +483,16 @@ void KuDAQ::updateCore1() {
                 core1_state = CORE1_IDLE; // Return to idle if client disconnected
             }
             break;
+        case CORE1_DEBUG_CMD :
+            // placeholder
+            break;
     }
 
     // If a client is connected, read messages and process commands
     if (client && client.connected()) {
         message = readMessage();
         if (!message.empty()) {
+            client.println("message received !");
             core1_state = CORE1_CMD_PROCESSING;
         }
     }
@@ -489,9 +523,9 @@ void KuDAQ::initialize_all() {
         while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
-    trigger_core0_setup = xQueueCreate(1, sizeof(bool));
-    if (trigger_core0_setup == NULL) {
-        Serial.println("Failed to create core0 setup trigger queue!");
+    core0_stateQueue = xQueueCreate(1, sizeof(CORE0_FSM));
+    if (core0_stateQueue == NULL) {
+        Serial.println("Failed to create core0 state queue!");
         while (1) vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
@@ -507,36 +541,9 @@ void KuDAQ::WiFi_setup() {
     delay(100); // wait for WiFi to initialize
 }
 
-void KuDAQ::WiFi_wellness() {
-    // check for new client connection
-    if (server.hasClient()) {
-        if (!client || !client.connected()) {
-            client = server.available();
-            Serial.println("New client connected!");
-        } else {
-            server.available().stop(); // Reject new connection if one is already active
-        }
-    }
-
-    // If connection lost for more than 2 seconds, reset client
-    static unsigned long last_connected_time = 0;
-    if (client && client.connected()) {
-        last_connected_time = millis();
-    } else {
-        if (millis() - last_connected_time > 2000) {
-            client.stop();
-            Serial.println("Client disconnected due to timeout.");
-            // Reset client to allow new connections
-            client = WiFiClient();
-        }
-    }
-
-    // Restart server if WiFi is disconnected
-    if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("WiFi disconnected! Restarting server...");
-        server.end();
-        WiFi_setup();
-    }
+void KuDAQ::core0_sendNewState(CORE0_FSM new_state) {
+    // Send a new state to Core 0 via the core0 state queue
+    xQueueOverwrite(core0_stateQueue, &new_state);
 }
 
 void KuDAQ::cmdHandler(std::vector<std::string> message) {
@@ -580,6 +587,42 @@ void KuDAQ::cmdHandler(std::vector<std::string> message) {
             Serial.println(current_sr);
         }
          // Add more parameters as needed
+    }
+    else if (command == "stream") {
+        const std::string& param = message.size() > 1 ? message[1] : "";
+
+        if (param == "orient") {
+            // Trigger Core 0 to start streaming orientation data
+            ;
+        }
+    }
+    else if (command == "debug") {
+        const std::string& param = message.size() > 1 ? message[1] : "";
+        const std::string& value = message.size() > 2 ? message[2] : "";
+
+        if (param == "cmd") {
+            if (value == "on") {
+                core1_state = CORE1_DEBUG_CMD;
+                Serial.println("Debug mode enabled.");
+            } 
+            else if (value == "off") {
+                #undef DEBUG
+                Serial.println("Debug mode disabled.");
+            }
+        }
+    }
+
+
+    else {
+        // In case of invalid message, print to TCP the received message for debugging
+        if (client && client.connected()) {
+            client.print("Invalid command received: ");
+            for (size_t i = 0; i < message.size(); i++) {
+                if (i > 0) client.print(" ");
+                client.print(message[i].c_str());
+            }
+            client.println();
+        }
     }
     // Add more command handling as needed
 }

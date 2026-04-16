@@ -101,8 +101,7 @@ class KuDAQ {
     private:
         // Private methods
         void WiFi_setup();
-        void WiFi_wellness();
-        void core0_setupInterrupt(bool trigger);
+        void core0_sendNewState(CORE0_FSM new_state);
         void cmdHandler(std::vector<std::string> cmd_tokens);
         std::vector<std::string> readMessage();
         // Private members
@@ -111,7 +110,7 @@ class KuDAQ {
         Sensor *sensor1 = nullptr;
         Sensor *sensor2 = nullptr;
         QueueHandle_t orientationQueue = nullptr;
-        QueueHandle_t trigger_core0_setup = nullptr;
+        QueueHandle_t core0_stateQueue = nullptr;
         // Private variables
         const char* ssid = "KuDAQ_stream"; // IP : 192.168.4.1
         const char* password = "12345678";
