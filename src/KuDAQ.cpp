@@ -378,7 +378,8 @@ inline void Sensor::compute_b() {
 KuDAQ::KuDAQ() {
     // Initialize variables
     core0_state = CORE0_ORIENT_ACQ;
-    core1_state = CORE1_ORIENT_STREAM;
+    //core1_state = CORE1_ORIENT_STREAM;
+    core1_state = CORE1_IDLE;
 
 }
 
@@ -405,97 +406,102 @@ KuDAQ::~KuDAQ() {
 // --- GENERAL METHODS ---
 
 void KuDAQ::updateCore0() {
-    // Core 0 is responsible for sensor data acquisition and processing
-    // variables
+    // variable definiton
     static orientation_buffer_t orientation1_sender;
-    static CORE0_FSM core0_newState;
-    // Check for new state commands from Core 1 via the core0 state queue
-    if(xQueuePeek(core0_stateQueue, &core0_newState, 0) == pdTRUE) {
-        core0_state = core0_newState;
-        // Mark this state as received by clearing the queue
-        xQueueReceive(core0_stateQueue, &core0_newState, 0);
-    }
 
-    // FSM
     switch(core0_state) {
-        case CORE0_IDLE :
-            // Wait for command from Core 1
-            break;
-        case CORE0_ORIENT_ACQ :
-            // Acquire orientation data from both sensors and send to Core 1
+        case CORE0_ORIENT_ACQ:
+            // data acquisition and processing
             sensor1->aquisition();
             orientation1_sender = sensor1->getRawOrientation();
             // send only if there's new data
             if (orientation1_sender.newData) {
-                // send orientation data to Core 1 via queue
-                xQueueOverwrite(orientationQueue, &orientation1_sender);
-                orientation1_sender.newData = false; // Mark data as sent
+            // For now, send orientation data over the queue (instead of accel) for testing
+            xQueueOverwrite(orientationQueue, &orientation1_sender);
+            orientation1_sender.newData = false; // Mark data as sent
+
+            // compute and send aquisition frequency
+            static unsigned long last_acquisition_ms = 0;
+            static int acquisition_counter = 0;
+            acquisition_counter++;
+            if (millis() - last_acquisition_ms >= 1000) {
+                last_acquisition_ms = millis();
+                Serial.print("Acquisition frequency: ");
+                Serial.println(acquisition_counter);
+                acquisition_counter = 0;
             }
 
-            #ifdef DEBUG
-                Serial.println("running : CORE0_ORIENT_ACQ");
-            #endif
-
+            }
             break;
-        case CORE0_ACCEL_ACQ :
-            // Acquire accel and gyro data from both sensors, filter, and send to Core 1
+
+        default:
             break;
     }
-
+    //vTaskDelay(1 / portTICK_PERIOD_MS);
 }
 
 void KuDAQ::updateCore1() {
-    // Core 1 is responsible for communication with the client and command processing
-    // variables
-    static std::vector<std::string> message;
-    static orientation_buffer_t orientation1_receiver;
-    static bool newMessage = false;
-    static CORE1_FSM fallback_state = CORE1_IDLE; // To return to after command processing
-    // Check WiFi connection and client status
-    //WiFi_wellness();
 
-    switch(core1_state) {
-        case CORE1_IDLE :
-            // Wait for client connection and commands
-            fallback_state = CORE1_IDLE; // Stay in idle if no command is being processed
+    // Keep command handling active in every state so the client can always control the DAQ.
+    if (!client || !client.connected()) {
+        client = server.available();
+    }
+    if (client && client.connected()) {
+        std::vector<std::string> cmd_tokens = readMessage();
+        if (!cmd_tokens.empty()) {
+            cmdHandler(cmd_tokens);
+        }
+    }
+
+    switch (core1_state) {
+        case CORE1_IDLE:
+            // nothing...
             break;
-        case CORE1_CMD_PROCESSING :
-            // Process incoming commands from the client
-            cmdHandler(message);
-            message.clear(); // Clear the message after processing
-            core1_state = fallback_state; // Return to the previous state after command processing
-            break;
-        case CORE1_ORIENT_STREAM :
-            // Stream orientation data to the client if connected
-            if (client && client.connected()) {
-                // Check if new orientation data is available from Core 0 via queue
-                if (xQueuePeek(orientationQueue, &orientation1_receiver, 0) == pdTRUE) {
+        case CORE1_ORIENT_STREAM:
+            // variable definition
+            static orientation_buffer_t orientation1_receiver;
+            static unsigned long last_wifi_send_ms = 0;
+            static int wifi_send_counter = 0;
+            // wait up to 100 ms for data
+            if (xQueueReceive(orientationQueue, &orientation1_receiver, pdMS_TO_TICKS(100)) == pdTRUE) {
+
+                if (client && client.connected()) {
                     client.print("PITCH:");
                     client.println(orientation1_receiver.rpy_buffer[0], 3);
                     client.print("ROLL:");
                     client.println(orientation1_receiver.rpy_buffer[1], 3);
                     client.print("YAW:");
                     client.println(orientation1_receiver.rpy_buffer[2], 3);
-                    // Mark this data as sent by clearing the queue
-                    xQueueReceive(orientationQueue, &orientation1_receiver, 0);
+                    //Serial.println("send data over wifi !");
+
+                    // sending frequency counter (for debug)
+                    wifi_send_counter++;
+                    unsigned long current_ms = millis();
+                    if (current_ms - last_wifi_send_ms >= 1000) {
+                        last_wifi_send_ms = current_ms;
+                        client.print("SENDING_FREQUENCY:");
+                        client.println(wifi_send_counter);
+                        wifi_send_counter = 0;
+                    }
                 }
-            } else {
-                core1_state = CORE1_IDLE; // Return to idle if client disconnected
+
+            #ifdef SERIAL_STREAM
+            // Optional USB debug output.
+            Serial.print("Pitch : ");
+            Serial.println(orientation1_receiver.rpy_buffer[0], 3);
+            Serial.print("Roll : ");
+            Serial.println(orientation1_receiver.rpy_buffer[1], 3);
+            Serial.print("Yaw : ");
+            Serial.println(orientation1_receiver.rpy_buffer[2], 3);
+            Serial.println("---------------------------------------------------------------------------------");
+            #endif
             }
             break;
-        case CORE1_DEBUG_CMD :
-            // placeholder
+
+        default:
             break;
     }
-
-    // If a client is connected, read messages and process commands
-    if (client && client.connected()) {
-        message = readMessage();
-        if (!message.empty()) {
-            client.println("message received !");
-            core1_state = CORE1_CMD_PROCESSING;
-        }
-    }
+    vTaskDelay(1 / portTICK_PERIOD_MS);
 }
 
 void KuDAQ::initialize_all() {
@@ -554,77 +560,184 @@ void KuDAQ::cmdHandler(std::vector<std::string> message) {
 
     const std::string& command = message[0]; // First token is the command
 
+    // print received command for debugging
+    Serial.print("Received command: ");
+    for (size_t i = 0; i < message.size(); i++) {
+        if (i > 0) Serial.print(" ");
+        Serial.print(message[i].c_str());
+    }
+    Serial.println();
+    Serial.println("----------------------------------------------------------------------------------");
+
+    auto reply = [&](const char *msg) {
+        Serial.println(msg);
+        if (client && client.connected()) {
+            client.println(msg);
+        }
+    };
+
+    if (command == "ping") {
+        reply("PONG");
+        return;
+    }
+
+    if (command == "stream") {
+        const std::string& param = message.size() > 1 ? message[1] : "";
+        const std::string& value = message.size() > 2 ? message[2] : "";
+
+        if (param == "orient") {
+            if (value == "on") {
+                core1_state = CORE1_ORIENT_STREAM;
+                reply("OK stream orient on");
+            } else if (value == "off") {
+                core1_state = CORE1_IDLE;
+                reply("OK stream orient off");
+            } else {
+                reply("ERR usage: stream orient on|off");
+            }
+            return;
+        }
+
+        reply("ERR unknown stream target");
+        return;
+    }
+
     if (command == "set") {
         const std::string& param = message.size() > 1 ? message[1] : "";
         const std::string& value = message.size() > 2 ? message[2] : "";
 
-        if (param == "cf") {
-            float new_freq = std::stof(value);
-            sensor1->setCutoffFreq(new_freq);
-            sensor2->setCutoffFreq(new_freq);
-            Serial.print("Cutoff frequency set to ");
-            Serial.println(new_freq);
-        } else if (param == "sr") {
-            float new_sr = std::stof(value);
-            sensor1->setSamplingRate(new_sr);
-            sensor2->setSamplingRate(new_sr);
-            Serial.print("Sampling rate set to ");
-            Serial.println(new_sr);
+        if (param != "cf" && param != "sr") {
+            reply("ERR usage: set cf|sr <value>");
+            return;
         }
-         // Add more parameters as needed
-    }
-    else if (command == "get") {
-        const std::string& param = message.size() > 1 ? message[1] : "";
-        const std::string& value = message.size() > 2 ? message[2] : "";
 
-        if (param == "cf") {
-            float current_cf = sensor1->getCutoffFreq(); // Assuming both sensors have the same cutoff frequency
-            Serial.print("Current cutoff frequency is ");
-            Serial.println(current_cf);
-        } else if (param == "sr") {
-            float current_sr = sensor1->getSamplingRate(); // Assuming both sensors have the same sampling rate
-            Serial.print("Current sampling rate is ");
-            Serial.println(current_sr);
-        }
-         // Add more parameters as needed
-    }
-    else if (command == "stream") {
-        const std::string& param = message.size() > 1 ? message[1] : "";
-
-        if (param == "orient") {
-            // Trigger Core 0 to start streaming orientation data
-            ;
-        }
-    }
-    else if (command == "debug") {
-        const std::string& param = message.size() > 1 ? message[1] : "";
-        const std::string& value = message.size() > 2 ? message[2] : "";
-
-        if (param == "cmd") {
-            if (value == "on") {
-                core1_state = CORE1_DEBUG_CMD;
-                Serial.println("Debug mode enabled.");
-            } 
-            else if (value == "off") {
-                #undef DEBUG
-                Serial.println("Debug mode disabled.");
+        try {
+            float parsed = std::stof(value);
+            if (param == "cf") {
+                sensor1->setCutoffFreq(parsed);
+                sensor2->setCutoffFreq(parsed);
+                reply("OK set cf");
+            } else {
+                sensor1->setSamplingRate(parsed);
+                sensor2->setSamplingRate(parsed);
+                reply("OK set sr");
             }
+        } catch (...) {
+            reply("ERR invalid numeric value");
         }
+        return;
     }
 
+    if (command == "get") {
+        const std::string& param = message.size() > 1 ? message[1] : "";
 
-    else {
-        // In case of invalid message, print to TCP the received message for debugging
-        if (client && client.connected()) {
-            client.print("Invalid command received: ");
-            for (size_t i = 0; i < message.size(); i++) {
-                if (i > 0) client.print(" ");
-                client.print(message[i].c_str());
+        if (param == "cf") {
+            if (client && client.connected()) {
+                client.print("CF:");
+                client.println(sensor1->getCutoffFreq(), 3);
             }
-            client.println();
+            Serial.print("CF:");
+            Serial.println(sensor1->getCutoffFreq(), 3);
+            return;
         }
+
+        if (param == "sr") {
+            if (client && client.connected()) {
+                client.print("SR:");
+                client.println(sensor1->getSamplingRate(), 3);
+            }
+            Serial.print("SR:");
+            Serial.println(sensor1->getSamplingRate(), 3);
+            return;
+        }
+
+        if (param == "state") {
+            if (client && client.connected()) {
+                client.print("STATE:");
+                client.println(static_cast<int>(core1_state));
+            }
+            Serial.print("STATE:");
+            Serial.println(static_cast<int>(core1_state));
+            return;
+        }
+
+        reply("ERR usage: get cf|sr|state");
+        return;
     }
-    // Add more command handling as needed
+
+    reply("ERR unknown command");
+
+    // if (command == "set") {
+    //     const std::string& param = message.size() > 1 ? message[1] : "";
+    //     const std::string& value = message.size() > 2 ? message[2] : "";
+
+    //     if (param == "cf") {
+    //         float new_freq = std::stof(value);
+    //         sensor1->setCutoffFreq(new_freq);
+    //         sensor2->setCutoffFreq(new_freq);
+    //         Serial.print("Cutoff frequency set to ");
+    //         Serial.println(new_freq);
+    //     } else if (param == "sr") {
+    //         float new_sr = std::stof(value);
+    //         sensor1->setSamplingRate(new_sr);
+    //         sensor2->setSamplingRate(new_sr);
+    //         Serial.print("Sampling rate set to ");
+    //         Serial.println(new_sr);
+    //     }
+    //      // Add more parameters as needed
+    // }
+    // else if (command == "get") {
+    //     const std::string& param = message.size() > 1 ? message[1] : "";
+    //     const std::string& value = message.size() > 2 ? message[2] : "";
+
+    //     if (param == "cf") {
+    //         float current_cf = sensor1->getCutoffFreq(); // Assuming both sensors have the same cutoff frequency
+    //         Serial.print("Current cutoff frequency is ");
+    //         Serial.println(current_cf);
+    //     } else if (param == "sr") {
+    //         float current_sr = sensor1->getSamplingRate(); // Assuming both sensors have the same sampling rate
+    //         Serial.print("Current sampling rate is ");
+    //         Serial.println(current_sr);
+    //     }
+    //      // Add more parameters as needed
+    // }
+    // else if (command == "stream") {
+    //     const std::string& param = message.size() > 1 ? message[1] : "";
+
+    //     if (param == "orient") {
+    //         // Trigger Core 0 to start streaming orientation data
+    //         ;
+    //     }
+    // }
+    // else if (command == "debug") {
+    //     const std::string& param = message.size() > 1 ? message[1] : "";
+    //     const std::string& value = message.size() > 2 ? message[2] : "";
+
+    //     if (param == "cmd") {
+    //         if (value == "on") {
+    //             core1_state = CORE1_DEBUG_CMD;
+    //             Serial.println("Debug mode enabled.");
+    //         } 
+    //         else if (value == "off") {
+    //             #undef DEBUG
+    //             Serial.println("Debug mode disabled.");
+    //         }
+    //     }
+    // }
+
+
+    // else {
+    //     // In case of invalid message, print to TCP the received message for debugging
+    //     if (client && client.connected()) {
+    //         client.print("Invalid command received: ");
+    //         for (size_t i = 0; i < message.size(); i++) {
+    //             if (i > 0) client.print(" ");
+    //             client.print(message[i].c_str());
+    //         }
+    //         client.println();
+    //     }
+    // }
+    // // Add more command handling as needed
 }
 
 std::vector<std::string> KuDAQ::readMessage() {
