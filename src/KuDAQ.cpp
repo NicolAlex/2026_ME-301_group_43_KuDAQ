@@ -408,6 +408,12 @@ KuDAQ::~KuDAQ() {
 void KuDAQ::updateCore0() {
     // variable definiton
     static orientation_buffer_t orientation1_sender;
+    static CORE0_FSM newState;
+
+    // state change check
+    if (xQueueReceive(core0_stateQueue, &newState, 0) == pdTRUE) {
+        core0_state = newState;
+    }
 
     switch(core0_state) {
         case CORE0_ORIENT_ACQ:
@@ -588,9 +594,11 @@ void KuDAQ::cmdHandler(std::vector<std::string> message) {
         if (param == "orient") {
             if (value == "on") {
                 core1_state = CORE1_ORIENT_STREAM;
+                core0_sendNewState(CORE0_ORIENT_ACQ); // Set core 0 to acquisition state
                 reply("OK stream orient on");
             } else if (value == "off") {
                 core1_state = CORE1_IDLE;
+                core0_sendNewState(CORE0_IDLE); // Set core 0 to idle state
                 reply("OK stream orient off");
             } else {
                 reply("ERR usage: stream orient on|off");

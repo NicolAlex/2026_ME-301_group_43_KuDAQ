@@ -7,6 +7,16 @@ final int BG_COLOR = color(6, 10, 8);
 final int GRID_COLOR = color(25, 60, 35);
 final int TEXT_COLOR = color(165, 225, 170);
 final int CUBE_EDGE_COLOR = color(120, 255, 140);
+final int BUTTON_ON_COLOR = color(70, 170, 95);
+final int BUTTON_OFF_COLOR = color(190, 85, 75);
+final int BUTTON_DISABLED_COLOR = color(75, 90, 80);
+final int BUTTON_TEXT_COLOR = color(240, 250, 240);
+
+final float BUTTON_W = 150;
+final float BUTTON_H = 44;
+final float BUTTON_GAP = 16;
+final float BUTTON_X = 24;
+final float BUTTON_Y = 182;
 
 Client client;
 long lastConnectAttemptMs = 0;
@@ -25,6 +35,9 @@ boolean hasYaw = false;
 
 float sendingFrequencyHz = -1;
 long lastPacketMs = 0;
+boolean showCube = false;
+String lastServerMessage = "-";
+long lastServerMessageMs = 0;
 
 void setup() {
   size(1280, 800, P3D);
@@ -41,8 +54,11 @@ void draw() {
   connectIfNeeded();
   readTcpStream();
 
-  drawOrientedCube();
+  if (showCube) {
+    drawOrientedCube();
+  }
   drawHud();
+  drawButtons();
 }
 
 void connectIfNeeded() {
@@ -60,6 +76,7 @@ void connectIfNeeded() {
   try {
     client = new Client(this, ESP32_IP, ESP32_PORT);
     println("Connected.");
+    sendStreamStateCommand();
   }
   catch (Exception e) {
     client = null;
@@ -88,8 +105,14 @@ void readTcpStream() {
 }
 
 void parseLine(String line) {
+  if (line.startsWith("OK ") || line.startsWith("ERR ") || line.equals("PONG")) {
+    rememberServerMessage(line);
+    return;
+  }
+
   int sep = line.indexOf(':');
   if (sep <= 0 || sep >= line.length() - 1) {
+    rememberServerMessage(line);
     return;
   }
 
@@ -127,6 +150,12 @@ void parseLine(String line) {
     catch (Exception e) {
       return;
     }
+  } else if (key.equals("CF") || key.equals("SR") || key.equals("STATE")) {
+    rememberServerMessage(line);
+    return;
+  } else {
+    rememberServerMessage(line);
+    return;
   }
 
   // Update orientation as soon as one complete P/R/Y vector is received.
@@ -258,6 +287,63 @@ void drawHud() {
     text("Last packet age: " + nf(ageMs, 1, 0) + " ms", 24, 108);
   }
 
+  text("ESP message: " + lastServerMessage, 24, 138);
+
   textAlign(CENTER, TOP);
   text("Orientation ranges: Pitch [-180,180]   Roll [-90,90]   Yaw [0,360)", width * 0.5, height - 30);
+}
+
+void drawButtons() {
+  drawButton(BUTTON_X, BUTTON_Y, BUTTON_W, BUTTON_H, "stream on", showCube, BUTTON_ON_COLOR);
+  drawButton(BUTTON_X + BUTTON_W + BUTTON_GAP, BUTTON_Y, BUTTON_W, BUTTON_H, "stream off", !showCube, BUTTON_OFF_COLOR);
+}
+
+void drawButton(float x, float y, float w, float h, String label, boolean isActive, int activeColor) {
+  stroke(30, 45, 35);
+  strokeWeight(1.5);
+  fill(isActive ? activeColor : BUTTON_DISABLED_COLOR);
+  rect(x, y, w, h, 8);
+
+  fill(BUTTON_TEXT_COLOR);
+  textAlign(CENTER, CENTER);
+  text(label, x + w * 0.5, y + h * 0.5 - 1);
+}
+
+boolean isInside(float mx, float my, float x, float y, float w, float h) {
+  return mx >= x && mx <= x + w && my >= y && my <= y + h;
+}
+
+void mousePressed() {
+  if (isInside(mouseX, mouseY, BUTTON_X, BUTTON_Y, BUTTON_W, BUTTON_H)) {
+    showCube = true;
+    sendStreamStateCommand();
+    return;
+  }
+
+  float offX = BUTTON_X + BUTTON_W + BUTTON_GAP;
+  if (isInside(mouseX, mouseY, offX, BUTTON_Y, BUTTON_W, BUTTON_H)) {
+    showCube = false;
+    sendStreamStateCommand();
+  }
+}
+
+void sendStreamStateCommand() {
+  String command = showCube ? "stream orient on" : "stream orient off";
+  sendTcpCommand(command);
+}
+
+void rememberServerMessage(String line) {
+  lastServerMessage = line;
+  lastServerMessageMs = millis();
+  println("ESP32: " + line);
+}
+
+void sendTcpCommand(String command) {
+  if (client == null || !client.active()) {
+    println("Cannot send command, TCP client is not connected: " + command);
+    return;
+  }
+
+  client.write(command + "\r\n");
+  println("Sent command: " + command);
 }
