@@ -90,6 +90,7 @@ class Sensor {
         inline void compute_a();
         inline void compute_b();
 };
+
 class KuDAQ {
     public:
         KuDAQ();

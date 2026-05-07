@@ -1,4 +1,6 @@
 import processing.net.*;
+import java.io.File;
+import java.io.PrintWriter;
 
 final String ESP32_IP = "192.168.4.1";
 final int ESP32_PORT = 23;
@@ -17,6 +19,7 @@ final float BUTTON_H = 44;
 final float BUTTON_GAP = 16;
 final float BUTTON_X = 24;
 final float BUTTON_Y = 182;
+final float RECORD_BUTTON_Y = 242;
 
 Client client;
 long lastConnectAttemptMs = 0;
@@ -32,12 +35,18 @@ float pendingYawDeg = 0;
 boolean hasPitch = false;
 boolean hasRoll = false;
 boolean hasYaw = false;
+boolean hasTimestamp = false;
+boolean expectingTimestampValue = false;
+long pendingTimestampUs = 0;
 
 float sendingFrequencyHz = -1;
 long lastPacketMs = 0;
 boolean showCube = false;
 String lastServerMessage = "-";
 long lastServerMessageMs = 0;
+boolean isRecording = false;
+PrintWriter recordingWriter = null;
+String recordingFileName = "-";
 
 void setup() {
   size(1280, 800, P3D);
@@ -110,8 +119,21 @@ void parseLine(String line) {
     return;
   }
 
+  if (expectingTimestampValue) {
+    try {
+      pendingTimestampUs = Long.parseLong(line);
+      hasTimestamp = true;
+      expectingTimestampValue = false;
+      commitOrientationSample();
+    }
+    catch (Exception e) {
+      expectingTimestampValue = false;
+    }
+    return;
+  }
+
   int sep = line.indexOf(':');
-  if (sep <= 0 || sep >= line.length() - 1) {
+  if (sep <= 0) {
     rememberServerMessage(line);
     return;
   }
@@ -143,6 +165,19 @@ void parseLine(String line) {
     catch (Exception e) {
       return;
     }
+  } else if (key.equals("TIMESTAMP")) {
+    if (valueText.length() == 0) {
+      expectingTimestampValue = true;
+      return;
+    }
+
+    try {
+      pendingTimestampUs = Long.parseLong(valueText);
+      hasTimestamp = true;
+    }
+    catch (Exception e) {
+      return;
+    }
   } else if (key.equals("SENDING_FREQUENCY")) {
     try {
       sendingFrequencyHz = Float.parseFloat(valueText);
@@ -158,23 +193,7 @@ void parseLine(String line) {
     return;
   }
 
-  // Update orientation as soon as one complete P/R/Y vector is received.
-  if (hasPitch && hasRoll && hasYaw) {
-    pitchDeg = constrain(pendingPitchDeg, -180, 180);
-    rollDeg = constrain(pendingRollDeg, -90, 90);
-
-    // Normalize yaw to [0, 360).
-    float y = pendingYawDeg % 360.0;
-    if (y < 0) {
-      y += 360.0;
-    }
-    yawDeg = y;
-
-    hasPitch = false;
-    hasRoll = false;
-    hasYaw = false;
-    lastPacketMs = millis();
-  }
+  commitOrientationSample();
 }
 
 
@@ -288,6 +307,7 @@ void drawHud() {
   }
 
   text("ESP message: " + lastServerMessage, 24, 138);
+  text("Recording: " + (isRecording ? recordingFileName : "inactive"), 24, 168);
 
   textAlign(CENTER, TOP);
   text("Orientation ranges: Pitch [-180,180]   Roll [-90,90]   Yaw [0,360)", width * 0.5, height - 30);
@@ -296,6 +316,8 @@ void drawHud() {
 void drawButtons() {
   drawButton(BUTTON_X, BUTTON_Y, BUTTON_W, BUTTON_H, "stream on", showCube, BUTTON_ON_COLOR);
   drawButton(BUTTON_X + BUTTON_W + BUTTON_GAP, BUTTON_Y, BUTTON_W, BUTTON_H, "stream off", !showCube, BUTTON_OFF_COLOR);
+  drawButton(BUTTON_X, RECORD_BUTTON_Y, BUTTON_W, BUTTON_H, "start recording", showCube && !isRecording, BUTTON_ON_COLOR);
+  drawButton(BUTTON_X + BUTTON_W + BUTTON_GAP, RECORD_BUTTON_Y, BUTTON_W, BUTTON_H, "stop recording", showCube && isRecording, BUTTON_OFF_COLOR);
 }
 
 void drawButton(float x, float y, float w, float h, String label, boolean isActive, int activeColor) {
@@ -322,14 +344,103 @@ void mousePressed() {
 
   float offX = BUTTON_X + BUTTON_W + BUTTON_GAP;
   if (isInside(mouseX, mouseY, offX, BUTTON_Y, BUTTON_W, BUTTON_H)) {
+    stopRecording();
     showCube = false;
     sendStreamStateCommand();
+    return;
+  }
+
+  if (!showCube) {
+    return;
+  }
+
+  if (isInside(mouseX, mouseY, BUTTON_X, RECORD_BUTTON_Y, BUTTON_W, BUTTON_H)) {
+    startRecording();
+    return;
+  }
+
+  if (isInside(mouseX, mouseY, offX, RECORD_BUTTON_Y, BUTTON_W, BUTTON_H)) {
+    stopRecording();
   }
 }
 
 void sendStreamStateCommand() {
   String command = showCube ? "stream orient on" : "stream orient off";
   sendTcpCommand(command);
+}
+
+void commitOrientationSample() {
+  if (!(hasPitch && hasRoll && hasYaw && hasTimestamp)) {
+    return;
+  }
+
+  pitchDeg = constrain(pendingPitchDeg, -180, 180);
+  rollDeg = constrain(pendingRollDeg, -90, 90);
+
+  float y = pendingYawDeg % 360.0;
+  if (y < 0) {
+    y += 360.0;
+  }
+  yawDeg = y;
+
+  if (isRecording && recordingWriter != null) {
+    recordingWriter.println(nf(pendingPitchDeg, 0, 3) + "," + nf(pendingRollDeg, 0, 3) + "," + nf(pendingYawDeg, 0, 3) + "," + pendingTimestampUs);
+    recordingWriter.flush();
+  }
+
+  hasPitch = false;
+  hasRoll = false;
+  hasYaw = false;
+  hasTimestamp = false;
+  lastPacketMs = millis();
+}
+
+void startRecording() {
+  if (!showCube || isRecording) {
+    return;
+  }
+
+  File recordingFolder = new File(sketchPath("")).getParentFile();
+  if (recordingFolder == null) {
+    println("Cannot resolve plot folder for recording.");
+    return;
+  }
+
+  String fileBaseName =
+    "kuDAQ_recording_" +
+    nf(year(), 4) + "-" + nf(month(), 2) + "-" + nf(day(), 2) + "_" +
+    nf(hour(), 2) + "-" + nf(minute(), 2) + "-" + nf(second(), 2) +
+    ".log";
+
+  File outputFile = new File(recordingFolder, fileBaseName);
+
+  try {
+    recordingWriter = createWriter(outputFile.getAbsolutePath());
+    recordingFileName = fileBaseName;
+    isRecording = true;
+    println("Recording started: " + outputFile.getAbsolutePath());
+  }
+  catch (Exception e) {
+    recordingWriter = null;
+    recordingFileName = "-";
+    isRecording = false;
+    println("Failed to start recording: " + e.getMessage());
+  }
+}
+
+void stopRecording() {
+  if (!isRecording) {
+    return;
+  }
+
+  if (recordingWriter != null) {
+    recordingWriter.flush();
+    recordingWriter.close();
+    recordingWriter = null;
+  }
+
+  isRecording = false;
+  println("Recording stopped: " + recordingFileName);
 }
 
 void rememberServerMessage(String line) {
