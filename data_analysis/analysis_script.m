@@ -1,5 +1,5 @@
-input_data = readmatrix('kuDAQ_recording_2026-04-24_16-06-33.log'); % Read data from log file
-time_vect = input_data(:, 4) / 1e6; % Extract time vector and convert from microseconds to seconds
+input_data = readmatrix('50_02.log'); % Read data from log file
+time_vect = input_data(:, 4) / 1e3; % Extract time vector and convert from microseconds to seconds
 % Extract sensor data (assuming columns 1-3 are sensor readings)
 axis1_vect = input_data(:, 1); % Sensor data for axis 1
 axis2_vect = input_data(:, 2); % Sensor data for axis 2

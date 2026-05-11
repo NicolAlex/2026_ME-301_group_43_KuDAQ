@@ -37,7 +37,7 @@ boolean hasRoll = false;
 boolean hasYaw = false;
 boolean hasTimestamp = false;
 boolean expectingTimestampValue = false;
-long pendingTimestampUs = 0;
+long pendingTimestampMs = 0;
 
 float sendingFrequencyHz = -1;
 long lastPacketMs = 0;
@@ -121,7 +121,7 @@ void parseLine(String line) {
 
   if (expectingTimestampValue) {
     try {
-      pendingTimestampUs = Long.parseLong(line);
+      pendingTimestampMs = Long.parseLong(line);
       hasTimestamp = true;
       expectingTimestampValue = false;
       commitOrientationSample();
@@ -172,7 +172,7 @@ void parseLine(String line) {
     }
 
     try {
-      pendingTimestampUs = Long.parseLong(valueText);
+      pendingTimestampMs = Long.parseLong(valueText);
       hasTimestamp = true;
     }
     catch (Exception e) {
@@ -384,7 +384,7 @@ void commitOrientationSample() {
   yawDeg = y;
 
   if (isRecording && recordingWriter != null) {
-    recordingWriter.println(nf(pendingPitchDeg, 0, 3) + "," + nf(pendingRollDeg, 0, 3) + "," + nf(pendingYawDeg, 0, 3) + "," + pendingTimestampUs);
+    recordingWriter.println(nf(pendingPitchDeg, 0, 3) + "," + nf(pendingRollDeg, 0, 3) + "," + nf(pendingYawDeg, 0, 3) + "," + pendingTimestampMs);
     recordingWriter.flush();
   }
 

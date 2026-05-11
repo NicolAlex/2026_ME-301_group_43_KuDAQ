@@ -90,11 +90,13 @@ bool Sensor::read_data() {
     // read both accel and gyro via the bmi wrapper
     bmi->readSensor();
     // check if enough time has passed since the last reading based on the sampling rate
-    if (micros() - last_timestamp >= 1000000 / sampling_rate) {
+    // compute sampling interval in milliseconds and use millis() for timing
+    unsigned long intervalMs = (unsigned long)(1000.0f / sampling_rate);
+    if (millis() - last_timestamp >= intervalMs) {
         #ifdef DEBUG
         Serial.println("Reading new data from sensor...");
         #endif
-        last_timestamp = micros();
+        last_timestamp = millis();
         // Move data in the  circular buffer to make place for the new data
         raw_accel_data.index = (raw_accel_data.index + 1) % 10; // circular buffer index
         raw_gyro_data.index = (raw_gyro_data.index + 1) % 10; // circular buffer index
@@ -730,3 +732,4 @@ std::vector<std::string> KuDAQ::readMessage() {
     rx_buffer.clear();
     return parsed_message;
 }
+
