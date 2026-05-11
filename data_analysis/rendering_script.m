@@ -1,4 +1,4 @@
-function analysis_script(t_min, t_max)
+function rendering_script(t_min, t_max)
 
     input_data = readmatrix('25.log'); % Read data from log file
 
@@ -73,7 +73,7 @@ function analysis_script(t_min, t_max)
     FT_axis3_sin = fft(axis3_sin); % Compute FFT
     f = (0:length_axis1/2-1) * Fs / length_axis1; % Frequency vector
 
-    % Plotting the FFT of the sines for debugging
+    % Plotting the FFT of the sines
     figure("Name", "FFT of the sines of the axes");
     plot(f, abs(FT_axis1_sin(1:length_axis1/2)), 'r', 'DisplayName', 'FFT of Sine of Axis 1', 'LineWidth', 2);
     hold on;
@@ -82,6 +82,27 @@ function analysis_script(t_min, t_max)
     xlabel('Frequency (Hz)');
     ylabel('Magnitude');
     title('FFT of the Sines of the Axes');
+    legend;
+    grid on;
+
+    %plotting the FFT of the raw data for comparison
+    axis1_vect = axis1_vect - mean(axis1_vect); % Center raw axis 1 data around zero
+    axis2_vect = axis2_vect - mean(axis2_vect); % Center raw axis 2 data around zero
+    axis3_vect = axis3_vect - mean(axis3_vect); % Center raw axis 3 data around zero
+    Fs = 1 / mean(diff(time_vect)); % Sampling frequency
+    length_axis1 = length(axis1_vect); % Length of the signal
+    FT_axis1_raw = fft(axis1_vect); % Compute FFT
+    FT_axis2_raw = fft(axis2_vect); % Compute FFT
+    FT_axis3_raw = fft(axis3_vect); % Compute FFT
+    f = (0:length_axis1/2-1) * Fs / length_axis1; % Frequency vector
+    figure("Name", "FFT of the raw data of the axes");
+    plot(f, abs(FT_axis1_raw(1:length_axis1/2)), 'r', 'DisplayName', 'FFT of Raw Axis 1', 'LineWidth', 2);
+    hold on;
+    plot(f, abs(FT_axis2_raw(1:length_axis1/2)), 'g', 'DisplayName', 'FFT of Raw Axis 2', 'LineWidth', 2);
+    plot(f, abs(FT_axis3_raw(1:length_axis1/2)), 'b', 'DisplayName', 'FFT of Raw Axis 3', 'LineWidth', 2);
+    xlabel('Frequency (Hz)');
+    ylabel('Magnitude');
+    title('FFT of the Raw Data of the Axes');
     legend;
     grid on;
 
