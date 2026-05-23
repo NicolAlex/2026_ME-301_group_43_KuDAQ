@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.12)  23 MAY 2026 18:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.12)  23 MAY 2026 18:48
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -9,8 +9,8 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
 (c:/texlive/2026/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
-(c:/texlive/2026/texmf-dist/tex/latex/base/size11.clo
-File: size11.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
+(c:/texlive/2026/texmf-dist/tex/latex/base/size10.clo
+File: size10.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
 )
 \c@part=\count275
 \c@section=\count276
@@ -401,24 +401,24 @@ File: l3backend-pdftex.def 2026-02-18 L3 backend support: PDF output (pdfTeX)
 ) (./report_v1.aux)
 \openout1 = `report_v1.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 64.
+LaTeX Font Info:    ... okay on input line 64.
  (c:/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count335
@@ -446,27 +446,27 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
 * modes: 
-* h-part:(L,W,R)=(72.26999pt, 452.9679pt, 72.26999pt)
-* v-part:(T,H,B)=(72.26999pt, 700.50687pt, 72.26999pt)
+* h-part:(L,W,R)=(54.2025pt, 489.10287pt, 54.2025pt)
+* v-part:(T,H,B)=(54.2025pt, 736.64185pt, 54.2025pt)
 * \paperwidth=597.50787pt
 * \paperheight=845.04684pt
-* \textwidth=452.9679pt
-* \textheight=700.50687pt
-* \oddsidemargin=0.0pt
-* \evensidemargin=0.0pt
-* \topmargin=-37.0pt
+* \textwidth=489.10287pt
+* \textheight=736.64185pt
+* \oddsidemargin=-18.06749pt
+* \evensidemargin=-18.06749pt
+* \topmargin=-55.06749pt
 * \headheight=13.6pt
 * \headsep=25.0pt
-* \topskip=11.0pt
+* \topskip=10.0pt
 * \footskip=30.0pt
-* \marginparwidth=50.0pt
+* \marginparwidth=4.0pt
 * \marginparsep=10.0pt
 * \columnsep=10.0pt
-* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
 * \hoffset=0.0pt
 * \voffset=0.0pt
 * \mag=1000
-* \@twocolumnfalse
+* \@twocolumntrue
 * \@twosidefalse
 * \@mparswitchfalse
 * \@reversemarginfalse
@@ -476,7 +476,7 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring ON on input line 60.
+Package hyperref Info: Link coloring ON on input line 64.
 (./report_v1.out) (./report_v1.out)
 \@outlinefile=\write3
 \openout3 = `report_v1.out'.
@@ -484,190 +484,192 @@ Package hyperref Info: Link coloring ON on input line 60.
  (c:/texlive/2026/texmf-dist/tex/latex/translations/translations-basic-dictionary-english.trsl
 File: translations-basic-dictionary-english.trsl (english translation file `translations-basic-dictionary')
 )
-Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 60.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 68.
+Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 64.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 72.
  (c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 68.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 72.
  (c:/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1
-
-{c:/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./report_v1.toc)
+) (./report_v1.toc)
 \tf@toc=\write4
 \openout4 = `report_v1.toc'.
 
- [2] [3] [4{c:/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}]
-<KuDAQ_diagram_png.drawio.png, id=97, 3737.965pt x 1453.43pt>
+ [1{c:/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
+
+
+]
+<KuDAQ_diagram_png.drawio.png, id=85, 3737.965pt x 1453.43pt>
 File: KuDAQ_diagram_png.drawio.png Graphic file (type png)
 <use KuDAQ_diagram_png.drawio.png>
-Package pdftex.def Info: KuDAQ_diagram_png.drawio.png  used on input line 118.
-(pdftex.def)             Requested size: 407.66833pt x 158.50278pt.
-<IMG_1313.jpg, id=99, 4047.12pt x 3035.34pt>
+Package pdftex.def Info: KuDAQ_diagram_png.drawio.png  used on input line 122.
+(pdftex.def)             Requested size: 489.10287pt x 190.17229pt.
+<IMG_1313.jpg, id=87, 4047.12pt x 3035.34pt>
 File: IMG_1313.jpg Graphic file (type jpg)
 <use IMG_1313.jpg>
-Package pdftex.def Info: IMG_1313.jpg  used on input line 126.
-(pdftex.def)             Requested size: 217.42265pt x 163.03055pt.
-<IMG_1318.jpg, id=100, 3035.34pt x 4047.12pt>
+Package pdftex.def Info: IMG_1313.jpg  used on input line 130.
+(pdftex.def)             Requested size: 114.98366pt x 86.19315pt.
+<IMG_1318.jpg, id=88, 3035.34pt x 4047.12pt>
 File: IMG_1318.jpg Graphic file (type jpg)
 <use IMG_1318.jpg>
-Package pdftex.def Info: IMG_1318.jpg  used on input line 127.
-(pdftex.def)             Requested size: 163.03055pt x 217.37407pt.
-<IMG_1322.jpg, id=101, 4047.12pt x 3035.34pt>
+Package pdftex.def Info: IMG_1318.jpg  used on input line 131.
+(pdftex.def)             Requested size: 86.19315pt x 114.9242pt.
+<IMG_1322.jpg, id=89, 4047.12pt x 3035.34pt>
 File: IMG_1322.jpg Graphic file (type jpg)
 <use IMG_1322.jpg>
-Package pdftex.def Info: IMG_1322.jpg  used on input line 128.
-(pdftex.def)             Requested size: 217.42265pt x 163.03055pt.
-<IMG_1324.jpg, id=102, 4047.12pt x 3035.34pt>
+Package pdftex.def Info: IMG_1322.jpg  used on input line 132.
+(pdftex.def)             Requested size: 114.98366pt x 86.19315pt.
+<IMG_1324.jpg, id=90, 4047.12pt x 3035.34pt>
 File: IMG_1324.jpg Graphic file (type jpg)
 <use IMG_1324.jpg>
-Package pdftex.def Info: IMG_1324.jpg  used on input line 129.
-(pdftex.def)             Requested size: 217.42265pt x 163.03055pt.
+Package pdftex.def Info: IMG_1324.jpg  used on input line 133.
+(pdftex.def)             Requested size: 114.98366pt x 86.19315pt.
 
-Overfull \hbox (5.87744pt too wide) in paragraph at lines 125--131
+Overfull \hbox (14.41591pt too wide) in paragraph at lines 129--135
  [][] 
  []
 
-[5 <./KuDAQ_diagram_png.drawio.png>] [6 <./IMG_1313.jpg> <./IMG_1318.jpg> <./IMG_1322.jpg> <./IMG_1324.jpg>]
-<core_task_pinning.png, id=115, 602.25pt x 90.3375pt>
+[2{c:/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc} <./IMG_1313.jpg> <./IMG_1318.jpg> <./IMG_1322.jpg> <./IMG_1324.jpg>]
+<core_task_pinning.png, id=98, 602.25pt x 90.3375pt>
 File: core_task_pinning.png Graphic file (type png)
 <use core_task_pinning.png>
-Package pdftex.def Info: core_task_pinning.png  used on input line 163.
-(pdftex.def)             Requested size: 181.18439pt x 27.17726pt.
-<millis_check.png, id=116, 642.60075pt x 218.0145pt>
+Package pdftex.def Info: core_task_pinning.png  used on input line 166.
+(pdftex.def)             Requested size: 215.59482pt x 32.33951pt.
+<millis_check.png, id=99, 642.60075pt x 218.0145pt>
 File: millis_check.png Graphic file (type png)
 <use millis_check.png>
-Package pdftex.def Info: millis_check.png  used on input line 167.
-(pdftex.def)             Requested size: 181.18439pt x 61.46944pt.
-<rtos_queue.png, id=117, 461.3235pt x 157.7895pt>
+Package pdftex.def Info: millis_check.png  used on input line 170.
+(pdftex.def)             Requested size: 215.59482pt x 73.14258pt.
+<rtos_queue.png, id=100, 461.3235pt x 157.7895pt>
 File: rtos_queue.png Graphic file (type png)
 <use rtos_queue.png>
-Package pdftex.def Info: rtos_queue.png  used on input line 171.
-(pdftex.def)             Requested size: 181.18439pt x 61.97102pt.
-<circular_buffer.png, id=118, 579.3645pt x 377.61075pt>
+Package pdftex.def Info: rtos_queue.png  used on input line 174.
+(pdftex.def)             Requested size: 215.59482pt x 73.74213pt.
+<circular_buffer.png, id=101, 579.3645pt x 377.61075pt>
 File: circular_buffer.png Graphic file (type png)
 <use circular_buffer.png>
-Package pdftex.def Info: circular_buffer.png  used on input line 175.
-(pdftex.def)             Requested size: 181.18439pt x 118.0895pt.
- [7 <./core_task_pinning.png> <./millis_check.png> <./rtos_queue.png>]
-<irr_filter.png, id=127, 699.8145pt x 220.4235pt>
+Package pdftex.def Info: circular_buffer.png  used on input line 178.
+(pdftex.def)             Requested size: 215.59482pt x 140.51468pt.
+<irr_filter.png, id=102, 699.8145pt x 220.4235pt>
 File: irr_filter.png Graphic file (type png)
 <use irr_filter.png>
-Package pdftex.def Info: irr_filter.png  used on input line 179.
-(pdftex.def)             Requested size: 181.18439pt x 57.06659pt.
-<ahrs_fusion.png, id=128, 702.82574pt x 265.59225pt>
+Package pdftex.def Info: irr_filter.png  used on input line 182.
+(pdftex.def)             Requested size: 215.59482pt x 67.90678pt.
+ [3 <./KuDAQ_diagram_png.drawio.png> <./core_task_pinning.png> <./millis_check.png> <./rtos_queue.png> <./circular_buffer.png>]
+<ahrs_fusion.png, id=114, 702.82574pt x 265.59225pt>
 File: ahrs_fusion.png Graphic file (type png)
 <use ahrs_fusion.png>
-Package pdftex.def Info: ahrs_fusion.png  used on input line 183.
-(pdftex.def)             Requested size: 181.18439pt x 68.46877pt.
-<wifi_setup.png, id=129, 687.7695pt x 166.82326pt>
+Package pdftex.def Info: ahrs_fusion.png  used on input line 186.
+(pdftex.def)             Requested size: 215.59482pt x 81.46953pt.
+<wifi_setup.png, id=115, 687.7695pt x 166.82326pt>
 File: wifi_setup.png Graphic file (type png)
 <use wifi_setup.png>
-Package pdftex.def Info: wifi_setup.png  used on input line 187.
-(pdftex.def)             Requested size: 181.18439pt x 43.94576pt.
- [8 <./circular_buffer.png> <./irr_filter.png> <./ahrs_fusion.png> <./wifi_setup.png>]
-<shark_teeth_example.png, id=138, 941.919pt x 441.8106pt>
+Package pdftex.def Info: wifi_setup.png  used on input line 190.
+(pdftex.def)             Requested size: 215.59482pt x 52.2925pt.
+<shark_teeth_example.png, id=116, 941.919pt x 441.8106pt>
 File: shark_teeth_example.png Graphic file (type png)
 <use shark_teeth_example.png>
-Package pdftex.def Info: shark_teeth_example.png  used on input line 225.
-(pdftex.def)             Requested size: 317.07614pt x 148.72374pt.
- [9]
-<Raw Data v.s. Sine of Data for Axis 3.png, id=143, 937.5828pt x 441.8106pt>
+Package pdftex.def Info: shark_teeth_example.png  used on input line 228.
+(pdftex.def)             Requested size: 239.55144pt x 112.36021pt.
+ [4 <./irr_filter.png> <./ahrs_fusion.png> <./wifi_setup.png> <./shark_teeth_example.png (PNG copy)>]
+<Raw Data v.s. Sine of Data for Axis 3.png, id=125, 937.5828pt x 441.8106pt>
 File: Raw Data v.s. Sine of Data for Axis 3.png Graphic file (type png)
 <use Raw Data v.s. Sine of Data for Axis 3.png>
-Package pdftex.def Info: Raw Data v.s. Sine of Data for Axis 3.png  used on input line 241.
-(pdftex.def)             Requested size: 317.07614pt x 149.41138pt.
- [10 <./shark_teeth_example.png (PNG copy)>]
-<25mm - sine full.png, id=149, 934.2102pt x 441.8106pt>
+Package pdftex.def Info: Raw Data v.s. Sine of Data for Axis 3.png  used on input line 244.
+(pdftex.def)             Requested size: 239.55144pt x 112.8793pt.
+<25mm - sine full.png, id=126, 934.2102pt x 441.8106pt>
 File: 25mm - sine full.png Graphic file (type png)
 <use 25mm - sine full.png>
-Package pdftex.def Info: 25mm - sine full.png  used on input line 251.
-(pdftex.def)             Requested size: 317.07614pt x 149.95068pt.
-<25mm - sine sample 1.png, id=150, 934.2102pt x 441.8106pt>
+Package pdftex.def Info: 25mm - sine full.png  used on input line 254.
+(pdftex.def)             Requested size: 239.55144pt x 113.28378pt.
+<25mm - sine sample 1.png, id=127, 934.2102pt x 441.8106pt>
 File: 25mm - sine sample 1.png Graphic file (type png)
 <use 25mm - sine sample 1.png>
-Package pdftex.def Info: 25mm - sine sample 1.png  used on input line 260.
-(pdftex.def)             Requested size: 135.89174pt x 64.26651pt.
-<25mm - sine sample 2.png, id=151, 938.5464pt x 441.8106pt>
+Package pdftex.def Info: 25mm - sine sample 1.png  used on input line 263.
+(pdftex.def)             Requested size: 114.98366pt x 54.37675pt.
+<25mm - sine sample 2.png, id=128, 938.5464pt x 441.8106pt>
 File: 25mm - sine sample 2.png Graphic file (type png)
 <use 25mm - sine sample 2.png>
-Package pdftex.def Info: 25mm - sine sample 2.png  used on input line 261.
-(pdftex.def)             Requested size: 135.89174pt x 63.96988pt.
-<25mm - sine sample 3.png, id=152, 934.2102pt x 441.8106pt>
+Package pdftex.def Info: 25mm - sine sample 2.png  used on input line 264.
+(pdftex.def)             Requested size: 114.98366pt x 54.12732pt.
+<25mm - sine sample 3.png, id=129, 934.2102pt x 441.8106pt>
 File: 25mm - sine sample 3.png Graphic file (type png)
 <use 25mm - sine sample 3.png>
-Package pdftex.def Info: 25mm - sine sample 3.png  used on input line 262.
-(pdftex.def)             Requested size: 135.89174pt x 64.26651pt.
- [11 <./Raw Data v.s. Sine of Data for Axis 3.png (PNG copy)> <./25mm - sine full.png (PNG copy)> <./25mm - sine sample 1.png (PNG copy)> <./25mm - sine sample 2.png (PNG copy)> <./25mm - sine sample 3.png (PNG copy)>]
-<25mm - FFT sample 1.png, id=160, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 25mm - sine sample 3.png  used on input line 265.
+(pdftex.def)             Requested size: 114.98366pt x 54.37675pt.
+
+Overfull \hbox (14.41591pt too wide) in paragraph at lines 262--267
+ [][] 
+ []
+
+<25mm - FFT sample 1.png, id=130, 939.51pt x 441.8106pt>
 File: 25mm - FFT sample 1.png Graphic file (type png)
 <use 25mm - FFT sample 1.png>
-Package pdftex.def Info: 25mm - FFT sample 1.png  used on input line 273.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
-<25mm - FFT sample 2.png, id=161, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 25mm - FFT sample 1.png  used on input line 276.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
+<25mm - FFT sample 2.png, id=131, 939.51pt x 441.8106pt>
 File: 25mm - FFT sample 2.png Graphic file (type png)
 <use 25mm - FFT sample 2.png>
-Package pdftex.def Info: 25mm - FFT sample 2.png  used on input line 274.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
-<25mm - FFT sample 3.png, id=162, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 25mm - FFT sample 2.png  used on input line 277.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
+<25mm - FFT sample 3.png, id=132, 939.51pt x 441.8106pt>
 File: 25mm - FFT sample 3.png Graphic file (type png)
 <use 25mm - FFT sample 3.png>
-Package pdftex.def Info: 25mm - FFT sample 3.png  used on input line 275.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
+Package pdftex.def Info: 25mm - FFT sample 3.png  used on input line 278.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
 
-Overfull \hbox (5.87744pt too wide) in paragraph at lines 272--277
+Overfull \hbox (14.41591pt too wide) in paragraph at lines 275--280
  [][] 
  []
 
-<25mm - FFT full.png, id=163, 939.9918pt x 441.8106pt>
+<25mm - FFT full.png, id=133, 939.9918pt x 441.8106pt>
 File: 25mm - FFT full.png Graphic file (type png)
 <use 25mm - FFT full.png>
-Package pdftex.def Info: 25mm - FFT full.png  used on input line 285.
-(pdftex.def)             Requested size: 317.07614pt x 149.03384pt.
-[12 <./25mm - FFT sample 1.png (PNG copy)> <./25mm - FFT sample 2.png (PNG copy)> <./25mm - FFT sample 3.png (PNG copy)> <./25mm - FFT full.png (PNG copy)>]
-<50mm - FFT sample 1.png, id=170, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 25mm - FFT full.png  used on input line 288.
+(pdftex.def)             Requested size: 239.55144pt x 112.58942pt.
+[5 <./Raw Data v.s. Sine of Data for Axis 3.png (PNG copy)> <./25mm - sine full.png (PNG copy)> <./25mm - sine sample 1.png (PNG copy)> <./25mm - sine sample 2.png (PNG copy)> <./25mm - sine sample 3.png (PNG copy)> <./25mm - FFT sample 1.png (PNG copy)> <./25mm - FFT sample 2.png (PNG copy)> <./25mm - FFT sample 3.png (PNG copy)>]
+<50mm - FFT sample 1.png, id=142, 939.51pt x 441.8106pt>
 File: 50mm - FFT sample 1.png Graphic file (type png)
 <use 50mm - FFT sample 1.png>
-Package pdftex.def Info: 50mm - FFT sample 1.png  used on input line 295.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
-<50mm - FFT sample 2.png, id=171, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 50mm - FFT sample 1.png  used on input line 298.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
+<50mm - FFT sample 2.png, id=143, 939.51pt x 441.8106pt>
 File: 50mm - FFT sample 2.png Graphic file (type png)
 <use 50mm - FFT sample 2.png>
-Package pdftex.def Info: 50mm - FFT sample 2.png  used on input line 296.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
-<50mm - FFT sample 3.png, id=172, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 50mm - FFT sample 2.png  used on input line 299.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
+<50mm - FFT sample 3.png, id=144, 939.51pt x 441.8106pt>
 File: 50mm - FFT sample 3.png Graphic file (type png)
 <use 50mm - FFT sample 3.png>
-Package pdftex.def Info: 50mm - FFT sample 3.png  used on input line 297.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
+Package pdftex.def Info: 50mm - FFT sample 3.png  used on input line 300.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
 
-Overfull \hbox (5.87744pt too wide) in paragraph at lines 294--299
+Overfull \hbox (14.41591pt too wide) in paragraph at lines 297--302
  [][] 
  []
 
-<10mm - FFT sample 1.png, id=173, 933.7284pt x 441.8106pt>
+<10mm - FFT sample 1.png, id=145, 933.7284pt x 441.8106pt>
 File: 10mm - FFT sample 1.png Graphic file (type png)
 <use 10mm - FFT sample 1.png>
-Package pdftex.def Info: 10mm - FFT sample 1.png  used on input line 307.
-(pdftex.def)             Requested size: 217.42265pt x 102.87495pt.
-<10mm - FFT sample 2.png, id=174, 939.51pt x 441.8106pt>
+Package pdftex.def Info: 10mm - FFT sample 1.png  used on input line 310.
+(pdftex.def)             Requested size: 114.98366pt x 54.40372pt.
+<10mm - FFT sample 2.png, id=146, 939.51pt x 441.8106pt>
 File: 10mm - FFT sample 2.png Graphic file (type png)
 <use 10mm - FFT sample 2.png>
-Package pdftex.def Info: 10mm - FFT sample 2.png  used on input line 308.
-(pdftex.def)             Requested size: 217.42265pt x 102.24126pt.
+Package pdftex.def Info: 10mm - FFT sample 2.png  used on input line 311.
+(pdftex.def)             Requested size: 114.98366pt x 54.06665pt.
 
-Overfull \hbox (5.87744pt too wide) in paragraph at lines 306--310
+Overfull \hbox (14.41591pt too wide) in paragraph at lines 309--313
  [][] 
  []
 
-[13 <./50mm - FFT sample 1.png (PNG copy)> <./50mm - FFT sample 2.png (PNG copy)> <./50mm - FFT sample 3.png (PNG copy)> <./10mm - FFT sample 1.png (PNG copy)> <./10mm - FFT sample 2.png (PNG copy)>]
-<Frequency v.s. nozzle depth.png, id=183, 936.6192pt x 441.8106pt>
+<Frequency v.s. nozzle depth.png, id=147, 936.6192pt x 441.8106pt>
 File: Frequency v.s. nozzle depth.png Graphic file (type png)
 <use Frequency v.s. nozzle depth.png>
-Package pdftex.def Info: Frequency v.s. nozzle depth.png  used on input line 319.
-(pdftex.def)             Requested size: 317.07614pt x 149.56642pt.
- [14 <./Frequency v.s. nozzle depth.png (PNG copy)>] [15] [16] [17] [18] [19] (./report_v1.aux)
+Package pdftex.def Info: Frequency v.s. nozzle depth.png  used on input line 321.
+(pdftex.def)             Requested size: 239.55144pt x 112.99391pt.
+[6 <./25mm - FFT full.png (PNG copy)> <./50mm - FFT sample 1.png (PNG copy)> <./50mm - FFT sample 2.png (PNG copy)> <./50mm - FFT sample 3.png (PNG copy)> <./10mm - FFT sample 1.png (PNG copy)> <./10mm - FFT sample 2.png (PNG copy)> <./Frequency v.s. nozzle depth.png (PNG copy)>] [7] [8] (./report_v1.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
@@ -676,18 +678,18 @@ Package rerunfilecheck Info: File `report_v1.out' has not changed.
 (rerunfilecheck)             Checksum: 981DFD1DF4D71EE0B653C3D948676C55;1923.
  ) 
 Here is how much of TeX's memory you used:
- 18331 strings out of 467349
- 355760 string characters out of 5419862
- 767333 words of memory out of 5000000
- 47186 multiletter control sequences out of 15000+600000
- 636440 words of font info for 72 fonts, out of 8000000 for 9000
+ 18344 strings out of 467349
+ 355985 string characters out of 5419862
+ 777207 words of memory out of 5000000
+ 47203 multiletter control sequences out of 15000+600000
+ 638799 words of font info for 82 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,14n,84p,1002b,1190s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb>
-Output written on report_v1.pdf (19 pages, 5642889 bytes).
+ 75i,14n,84p,1002b,1189s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb>
+Output written on report_v1.pdf (8 pages, 5666056 bytes).
 PDF statistics:
- 258 PDF objects out of 1000 (max. 8388607)
- 185 compressed objects within 2 object streams
- 48 named destinations out of 1000 (max. 500000)
+ 221 PDF objects out of 1000 (max. 8388607)
+ 155 compressed objects within 2 object streams
+ 37 named destinations out of 1000 (max. 500000)
  253 words of extra memory for PDF output out of 10000 (max. 10000000)
 
