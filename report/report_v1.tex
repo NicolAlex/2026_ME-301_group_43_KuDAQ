@@ -8,24 +8,60 @@
 \usepackage{graphicx}
 \usepackage[margin=1in]{geometry}
 \usepackage{fancyhdr}
+\usepackage[dvipsnames,svgnames]{xcolor}
+% Use colored captions matching the document color scheme
+\usepackage[labelfont={color=CatppuccinPeach,bf},textfont={color=CatppuccinSubtext1}]{caption}
 \usepackage{hyperref}
+\usepackage{titlesec}
 \usepackage{float}
 \usepackage{booktabs}
 \usepackage{siunitx}
 
+% Catppuccin Mocha Color Palette
+\definecolor{CatppuccinBase}{HTML}{1e1e2e}
+\definecolor{CattppuccinText}{HTML}{cdd6f4}
+\definecolor{CatppuccinSubtext1}{HTML}{bac2de}
+\definecolor{CatppuccinBlue}{HTML}{89b4fa}
+\definecolor{CatppuccinMauve}{HTML}{cba6f7}
+\definecolor{CatppuccinPeach}{HTML}{fab387}
+\definecolor{CatppuccinGreen}{HTML}{a6e3a1}
+\definecolor{CatppuccinMaroon}{HTML}{eba0ac}
+\definecolor{CatppuccinSurface0}{HTML}{313244}
+\definecolor{CatppuccinSurface1}{HTML}{45475a}
+
 % Header and Footer
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{Measurement Technics - Group 43}
-\lhead{KuDAQ Project Report}
-\cfoot{\thepage}
+\setlength{\headheight}{13.6pt}
+\rhead{\textcolor{CatppuccinMauve}{Measurement Technics - Group 43}}
+\lhead{\textcolor{CatppuccinMauve}{KuDAQ Project Report}}
+\cfoot{\textcolor{CatppuccinSubtext1}{\thepage}}
 
 % Document Metadata
-\title{\textbf{Measurement Technics\\Project Report}\\Group 43 - KuDAQ}
-\author{Authors Names}
-\date{\today}
+\title{\textbf{\textcolor{CatppuccinMauve}{Measurement Technics\\Project Report}}\\{\textcolor{CatppuccinBlue}{Group 43 - KuDAQ}}}
+\author{\textcolor{CatppuccinSubtext1}{Authors Names}}
+\date{\textcolor{CatppuccinSubtext1}{\today}}
+
+% Hyperref Configuration for Links
+\hypersetup{
+    colorlinks=true,
+    linkcolor=CatppuccinBlue,
+    urlcolor=CatppuccinMauve,
+    citecolor=CatppuccinGreen,
+    filecolor=CatppuccinPeach
+}
+
+% Section Heading Colors
+\titleformat{\section}{\Large\bfseries\color{CatppuccinMauve}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\color{CatppuccinBlue}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\bfseries\color{CatppuccinPeach}}{\thesubsubsection}{1em}{}
+\titleformat{\paragraph}{\bfseries\color{CatppuccinGreen}}{}{}{\space}
 
 \begin{document}
+
+% Set page background and text colors
+\pagecolor{CatppuccinBase}
+\color{CattppuccinText}
 
 % Title Page
 \maketitle
@@ -37,8 +73,8 @@
 
 % Introduction
 \section{Introduction}
-This report documents the experimental measurements and analysis conducted in the Measurement Technics course. The project focuses on the development and testing of the KuDAQ measurement system, which integrates various sensors for comprehensive data acquisition and analysis.
 
+\newpage
 \section{Measurements}
 
 \subsection{Measurement 1: Orientation}
@@ -61,66 +97,264 @@ We eventually decided for this experiment to focus on the position of the water 
 \subsubsection{Equipment and Setup}
 
 \paragraph{Electrical Hardware}
+For this measurement, we needed to extract the orientation of a small object versus time in an isolated experimental setup. To do this, we designed a fully integrated custom data acquisition system. The main requirements of this system were :
+\begin{itemize}
+    \item To be able to acquire data from an inertial measurement unit (IMU) sensor, in order to extract the orientation of the object versus time
+    \item To be able to acquire data at a high sampling frequency, in order to capture the movement of the object with a good resolution (i.e. at least 50Hz)
+    \item To be able to store internally, or to stream in real-time the measured data, in order to perform data analysis later on.
+    \item To be able to operate in a water environment, as the experiment is taking place in a water tank
+    \item To be fully independent and self-contained, in order to avoid any potential bias on the measurement
+\end{itemize}
+
+To meet these requirements, we designed the KuDAQ system, which is a custom data acquisition system based on a microcontroller and an IMU sensor, which is able to record acceleration and angular velocity data on all 3 axis. The microcontroller used is a small low-power developpement board based on the Espressif ESP32 chip, which is able to operate at high frequency, has multiple communication interfaces, has 2 CPU cores, and has bluetooth and WiFi connectivity. The IMU sensor used is the Bosch Sensortec BMI088, which is a high-performance 6-axis IMU sensor, with a wide measurement range and a high sampling frequency.
+The system is completed by an SD card read \& write module, which allows to store the measured data internally if needed (this feature was eventually not implemented in the software, even if the board was capable of doing it). The power management of the system is entirely handled by the dev board, as it has a built-in battery management system, which allows to power the system with a rechargeable battery, and to charge it through a USB connection.
+
+In order to communicate with the devices, the microcontroller uses I2C bus for the BMI088 sensor, and SPI bus for the SD card module. USB-Serial communication is used to stream data to a wired computer for debugging purposes, finally, WiFi communication through TCP/IP protocol is used to stream data in real-time wirelessly to a computer during the experiment, to avoid interfering with the device by having a cable wired in.
+
+\begin{figure}[H]
+\centering
+\textbf{\emph{The overall schematic of the system looks like this:}}
+\vspace{0.5em}
+\includegraphics[width=0.9\textwidth]{KuDAQ_diagram_png.drawio.png}
+\caption{KuDAQ system schematic.}
+\label{fig:system_schematic}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+    \includegraphics[width=0.48\textwidth]{IMG_1313.jpg} &
+    \includegraphics[width=0.48\textwidth,height=0.48\textwidth,keepaspectratio,angle=90]{IMG_1318.jpg} \\
+    \includegraphics[width=0.48\textwidth]{IMG_1322.jpg} &
+    \includegraphics[width=0.48\textwidth]{IMG_1324.jpg} 
+\end{tabular}
+\caption{Assembly and manufacturing photos of the KuDAQ board.}
+\label{fig:assembly_photos}
+\end{figure}
+
+Below are several pictures taken during the manufacturing of the board. We opted for a compact hand soldered board stack to minimise the volume taken by the system
+
 
 
 \paragraph{Mechanical Hardware}
-Describe the mechanical hardware and physical setup:
-\begin{itemize}
-    \item Mechanical mounting and fixtures
-    \item Calibration reference devices
-    \item Positioning and alignment tools
-    \item Environmental control equipment
-\end{itemize}
+The mechanical hardware of this system is relatively simple, as it only needs to act as a hollow shell to protect the electronic components from water, and to allow the object to float on the water surface. We first designed and 3d printed a hollow sphere in 2 parts. After initial testing of just the sphere, we found that the sphere was too smooth as an object to be caught and moved by the jet flow. We then decided to redesigned the object as a hollow square, with thick walls and large infill to ensure water tightness. The 3D print was then coated with a layer of transparent acrylic to furthermore ensure leaktightness of the PETG material.
+After initial testing of the square, we found that the object was correctly caught in the jet flow, but wasn't correctly leaktight, as water was penetrating the object through the joining surface between the two shells. To solve this problem, we 3D printed a custom TPU gasket to be placed between the shells. After extensive testing in the water immerged for several minutes, the object was finally fully leaktight and able to float on the water surface without any water penetration.
+for even more protection, we decided that during the real experiment, we would place the electronic board inside a closed latex glove, to ensure that even if some small amount of liquid was penetrating the object, it would not damage the circuit.
+
+\newpage
 
 \paragraph{Software Architecture}
-Describe the software architecture and computational framework:
+The firmware is written in C++ for the ESP32 microcontroller and is organised to separate sensing, signal processing, and communication using FreeRTOS and modular design principles.
+\newline
+\textbf{\emph{FreeRTOS implementation diagram:}}
+\newline
+--> insert diagram here <--
+\newline
+The program creates two concurrently running tasks pinned to different CPU cores : 
 \begin{itemize}
-    \item Data acquisition software and drivers
-    \item Real-time processing framework
-    \item Analysis tools (MATLAB/Python)
-    \item Communication protocols
+    \item \textbf{Acquisition Task:} responsible for reading raw sensor data from the BMI088 at a fixed sampling rate, applying low-pass filtering to reduce noise, and computing orientation estimates using an AHRS algorithm.
+    \item \textbf{Communication Task:} responsible for handling TCP/IP connections, parsing incoming commands to adjust parameters (e.g., sampling rate, filter settings), and streaming the latest sensor data to the acquisition computer in real-time.
 \end{itemize}
 
-\paragraph{Acquisition Method}
-Describe the data acquisition methodology:
+In order to meet the requirements of high sampling frequency, low latency, and reliable data streaming in a potentially noisy environment, several key design choices were made in the software architecture, including:
 \begin{itemize}
-    \item Sampling frequency and resolution
-    \item Data storage format
-    \item Synchronization method
-    \item Trigger and timing specifications
+    \item \textbf{Dual-core task pinning:} acquisition and communication run on separate CPU cores. This isolates time-critical sampling from the variable execution time of communication tasks, ensuring that sensor reads occur at constant intervals.
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{core_task_pinning.png}
+    \end{center}
+    \item \textbf{Delay-free acquisition loop:} the acquisition task does not use blocking waits, instead it checks elapsed time using the millis() function and performs reads only when the sampling interval has passed. This approach enables deterministic timing for sensor reads and helps maintaining a stable sampling frequency.
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{millis_check.png}
+    \end{center}
+    \item \textbf{Bounded, single-element queues with overwrite :} freshly acquired and processed sensor data is sent to the communication thread via a FreeRTOS queue with only one sample element, ensuring that only the most recent data packet is sent to the acquisition computer.
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{rtos_queue.png}
+    \end{center}
+    \item \textbf{Circular sample buffers:} The sensor data is stored in a circular buffer in the acquisition task, allowing for efficient storage of a known number of samples for filtering purposes (potentially useful for moving average filters, not implemented as of now).
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{circular_buffer.png}
+    \end{center}
+    \item \textbf{Configurable IIR filtering:} first and second-order low-pass filters are implemented with coefficients computed from the sampling rate and cutoff frequency. The filter's parameters can be adjusted at runtime via commands.
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{irr_filter.png}
+    \end{center}
+    \item \textbf{On-device orientation fusion:} a lightweight AHRS filter (Madgwick type algorithm) fuses accelerometer and gyroscope data into roll/pitch/yaw. Producing fused orientation on-device reduces the amount of data to stream and provides immediately usable orientation data for real-time applications.
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{ahrs_fusion.png}
+    \end{center}
+    \item \textbf{Non-blocking command handling and simple TCP control:} the communication task listens for incoming TCP connections and parses simple text-based commands to adjust parameters or request data. This allows for dynamic control of the acquisition process without interrupting the sampling loop.
+    \begin{center}
+    \includegraphics[width=0.4\textwidth]{wifi_setup.png}
+    \end{center}
+\end{itemize}
+
+These choices prioritise timely, predictable sampling and low-latency delivery of recent measurements, which are the primary requirements for a measurement system intended to capture dynamic motion in a fluid environment.
+
+\paragraph{Acquisition Method}
+In order to monitor the orientation of the object live during the test, we developped a custom plotting software using Processing, which is able to receive the data streamed by the KuDAQ system through WiFi, and to show a real-time vizualization of a cube representing the object, which is moving according to the received data.
+This software can also trigger the recording of the data in a .log file, specially encoded to be easily processed later with matlab for more advanced data analysis.
+\newpage
+The acquisition procedure is the following :
+\begin{itemize}
+    \item The KuDAQ system is turned on by pluggint the battery, and is placed in the sealed container.
+    \item The acquisition laptop is connected to the KuDAQ WiFi network.
+    \item The acquisition software is launched
+    \item The user starts the stream by clicking on the "Start Stream" button in the acquisition software, which sends a command to the KuDAQ system to start streaming data, and starts showing the real-time movement of the object on the screen.
+    \item The user can then click on the "Start Recording" button in the acquisition software, which starts recording the received data in a .log file.
+    \item When the battery runs low (approximately 1 hour of operation), the system turns off.
 \end{itemize}
 
 \subsubsection{Procedure}
-Describe the experimental procedure here. Include:
-\begin{enumerate}
-    \item Sensor initialization and calibration
-    \item Test conditions and environmental parameters
-    \item Data collection methodology
-    \item Time duration and sampling frequency
-\end{enumerate}
+Since the movement of the object is really slow, we decided to perform a total of 45 minutes of acquisition for each environmental condition, in order to have a good amount of data to analyse later on. During the acquisition, we made sure to not touch the water tank, and to avoid any contact with the object, in order to avoid any potential biais on the measurement.
+We decided to perform 3 acquisitions with the water pump at different heights in the water tank, while keeping the same horizontal position. The heights were defined to be :
+\begin{itemize}
+    \item 5 cm from the water surface
+    \item 2.5 cm from the water surface
+    \item 1 cm from the water surface
+\end{itemize}
+In fact, we oberved that placing the pump deeper than 5cm from the water surface was not creating a strong enough water flow to move the object around the tank.
 
 \subsubsection{Results}
-Present the measurement results and observations:
-\begin{itemize}
-    \item Raw data from sensors
-    \item Processed and filtered data
-    \item Graphical representations and plots
-    \item Statistical analysis
-\end{itemize}
+\paragraph{Visual observations :}
+During the test, we could clearly observe that the object was turning around itself, around the vertical axis, at a rythm of about 1 turn every 10 seconds. After a few second after dropping the object, it quickly achived a pseudo steady state, where the movement of the object was relatively stable. Nonetheless, we observed that the movement was heavily impacted by repeated contact between the cube and tank walls.
 
-\paragraph{Data Analysis:} Include relevant figures and tables here.
+\paragraph{Data Analysis :} The plots below where directly extracted from the raw data streamed by the KuDAQ system during the experiment. By zooming on the graph, we can clearly observe the periodic movement of the object. coherent with the visual observations, we can see that mainly one axis (the yaw axis) is moving with great amplitude compared to the other 2. The yaw axis orientation data is indexed in degrees between 0 and 360, and we can see that the angle is increasing in a linear fashion from 0 to 360, and then effectively dropping back to 0, which is coherent with the fact that the object is turning around itself in a consistent direction. The roll and pitch axis are relatively stable around 0, with some small amplitude noise, which is coherent with the fact that the object is not really tilting on the water surface, but rather just turning around itself.
+\
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{shark_teeth_example.png}
+\caption{Orientation of the object versus time during the experiment.}
+\label{fig:orientation_plot}
+\end{figure}
+
+This first measurement is interesting as it shows oscillatory events in the orientation of the object. this is particularly interesting as we are looking to see variations of the movements under small environmental changes.
+The next step of the analysis will be to perform frequency analysis of the orientation data, to see if we can identify some dominant frequencies in the signal. This approach is relevant here because studying frequency instead of time-domain data allows to identify clear and repeatable variations of the movement under the varying conditions, without having to rely on the exact timing of the events, which are in this case heavily impacted by the experimental conditions (contact with the walls, etc...).
+\paragraph{Frequency Analysis :}
+First of all, the raw data received from the KuDAQ system is not usable as is for frequency analysis, in fact, the data is encoded in degrees, with a finite resolution, i.e. for yaw, when a full turn is performed, when the angle reaches 360, it drops back to 0 if the object continues to turn in the same direction. This creates a discontinuity in the signal, which, from our understanding and own research, can create biais in the frequency analysis, as the Fourier transform will interpret this discontinuity as a high-frequency event, which is not the case in reality.
+
+To solve this problem, the usual solution is to perform an unwrapping of the signal before processing it. The problem here again is that the unwrapping just adds 360 when the angle drops from 360 to 0. In this way, the signal for mutliple circular turns becomes a linear signal, which contains no frequency component, and is therefore not usable for frequency analysis.
+
+The solution we found to this problem is to perform the fourier analysis not on the angle itself, but on the Sine of the angle. In this way, the signal becomes continuous (sin(0) = sin(360)), and the frequency information is preserved in the signal, as the Sine of the angle will still oscillate with the same frequency as the angle itself, but without any discontinuity. The only drawback of this approach is that we lose some information on the amplitude of the signal, as the Sine of the angle is between -1 and 1, but for our analysis, we are mainly interested in the frequency information, so this is not a problem.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Raw Data v.s. Sine of Data for Axis 3.png}
+\caption{Comparison between the raw angle signal and the sine of the angle signal over time. The frequenvy stays the same, but the discontinuity is removed in the sine signal, which makes it more suitable for frequency analysis.}
+\label{fig:angle_vs_sine}
+\end{figure}
+
+The results are the following :
+
+First, because the 45 minutes of acquisition is a very long signal, we have the possibility to isolate pieces of signal that we found to be more qualitative, i.e. where the object is not too impacted by contact with the walls, as an example, this is the total extracted data from the 2.5 cm height acquisition, totalling 44168 data points :
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{25mm - sine full.png}
+\caption{Sine of the angle signal over time for the 2.5 cm height acquisition.}
+\label{fig:sine_signal}
+\end{figure}
+
+We decided to extract from this signal 3 pieces of data that where the most "stable", these are the pieces in question :
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+    \includegraphics[width=0.3\textwidth]{25mm - sine sample 1.png} &
+    \includegraphics[width=0.3\textwidth]{25mm - sine sample 2.png} \\
+    \includegraphics[width=0.3\textwidth]{25mm - sine sample 3.png} &
+\end{tabular}
+\caption{3 extracted pieces of the sine of the angle signal over time for the 2.5 cm height acquisition.}
+\label{fig:sine_signal_parts}
+\end{figure}
+
+Then, we performed a Fourier transform on these 3 pieces, using the Fast Fourier Transform (FFT) algorithm on Matlab, to extract the frequency information from the signal. The results are the following :
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+    \includegraphics[width=0.48\textwidth]{25mm - FFT sample 1.png} &
+    \includegraphics[width=0.48\textwidth]{25mm - FFT sample 2.png} \\
+    \includegraphics[width=0.48\textwidth]{25mm - FFT sample 3.png} &
+\end{tabular}
+\caption{FFT of the 3 extracted pieces of the sine of the angle signal for the 2.5 cm height acquisition.}
+\label{fig:fft_signal_parts}
+\end{figure}
+
+we can see that, even if the 3 pieces of signal were distant in time by several minutes, the frequency information is relatively similar, in the sense that the dominant frequency is around 0.13 / 0.14 Hz for all 3 pieces, which is coherent with the fact that the object is turning around itself at a rythm of about 1 turn every 10 seconds (1 turn every 10 seconds = 0.1 turn per second = 0.1 Hz). We can also see that there are some other frequency components in the signal, but they are not as dominant as the main frequency, and they are not consistent across the 3 pieces of signal, which makes us think that they are more likely to be noise or artefacts rather than real frequency components of the movement.
+We are also confident that cutting the signal in different pieces and performing separate FFT is the good method, as the FFT of the full signal turns out to have much more artifacts and many dominant frequencies compared the pieces, which can be seen on the figure below :
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{25mm - FFT full.png}
+\caption{FFT of the full sine of the angle signal for the 2.5 cm height acquisition.}
+\label{fig:fft_full_signal}
+\end{figure}
+
+\newpage
+Using the exact same method, we performed the frequency analysis for the 5 cm height :
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+    \includegraphics[width=0.48\textwidth]{50mm - FFT sample 1.png} &
+    \includegraphics[width=0.48\textwidth]{50mm - FFT sample 2.png} \\
+    \includegraphics[width=0.48\textwidth]{50mm - FFT sample 3.png} &
+\end{tabular}
+\caption{FFT of the 3 extracted pieces of the sine of the angle signal for the 5 cm height acquisition.}
+\label{fig:fft_signal_parts_5cm}
+\end{figure}
+
+For the 1 cm height, we had an issue during the test as the battery of the KuDAQ ran out of power after only 15 minutes of acquisition, which is a different level of precision but we still decided to perform the exact same analysis on the data we were able to acquire :
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+    \includegraphics[width=0.48\textwidth]{10mm - FFT sample 1.png} &
+    \includegraphics[width=0.48\textwidth]{10mm - FFT sample 2.png} \\
+\end{tabular}
+\caption{FFT of the 2 extracted pieces of the sine of the angle signal for the 1 cm height acquisition.}
+\label{fig:fft_signal_parts_1cm}
+\end{figure}
+
+\newpage
+In the end, we can finally plot the dominant frequency with respect to the height of the water pump in the water tank, and we can see that there is a correlation between the height of the water pump and the dominant frequency at which the object is moving, especially between the 5 cm and the 2.5 cm where the difference is more significant.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Frequency v.s. nozzle depth.png}
+\caption{Dominant frequency of the movement of the object with respect to the height of the water pump in the water tank.}
+\label{fig:frequency_vs_height}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\captionsetup{labelfont={color=CatppuccinPeach,bf},textfont={color=CatppuccinSubtext1}}
+\caption{Summary of dominant frequency measurements and acquisition durations.}
+\label{tab:frequency_summary}
+\begingroup
+\color{CatppuccinSubtext1}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textcolor{CatppuccinPeach}{\textbf{Nozzle Depth (mm)}} & \textcolor{CatppuccinPeach}{\textbf{Dominant Freq. (Hz)}} & \textcolor{CatppuccinPeach}{\textbf{Std. Dev. (Hz)}} & \textcolor{CatppuccinPeach}{\textbf{Duration (min)}} \\
+\midrule
+50 & 0.047 & 0.008 & 45 \\
+25 & 0.136 & 0.007 & 45 \\
+10 & 0.132 & 0.007 & 15 \\
+\bottomrule
+\end{tabular}
+\endgroup
+\end{table}
+
+
+
 
 \subsubsection{Discussion}
-Discuss the results in the context of:
 \begin{itemize}
-    \item Expected behavior
-    \item Observed deviations and anomalies
-    \item Potential sources of error
-    \item Accuracy and limitations
+    \item \textbf{Expected behavior} : The results show a clear correlation between the height of the water pump and the dominant frequency of the movement of the object, which is coherent with our initial hypothesis that the closer the water pump is to the water surface, the stronger the water flow will be, and therefore the faster the object will be moving around itself.
+    \item \textbf{Observed deviations and anomalies} : The gap between the 2.5 cm and the 1 cm height contradicts the initial hypothesis, as the average frequency at 1 cm is slightly lower than the average frequency at 2.5 cm.
+    \item \textbf{Potential sources of error} : The last measurement at 1 cm height was impacted by a power failure of the KuDAQ system, which caused us to only be able to acquire 15 minutes of data instead of the planned 45 minutes, which can explain the deviation observed at this height, as we had less data to analyse, and therefore less precision in the frequency analysis. In addition, the movement of the object is heavily impacted by contact with the walls of the tank, which creates a lot of noise in the signal, and can potentially create some biais in the frequency analysis.
+    \item \textbf{Accuracy and limitations} : The battery life of the KuDAQ system was a limiting factor as it required to be charged mutliple times per testing session. The mechanical conception of the leaktight box was not allowing to easily access the battery, therefore, it was chosen to perform the test until the battery runs out of power, which caused the last measurement to be impacted by a power failure.
 \end{itemize}
 
 \subsubsection{Conclusions}
-Summarize the key findings from this measurement and their implications.
+This measurement was overall a success, as we were able to verify our initial hypothesis, while facing several limitations in the experimental setup. 
+It was also a good opportunity to experiment with embedded microsystems, using sensors, wireless communication, and a complex software architecture with real-time and multi-threading features.
+Finally, the data analysis was also a good way of getting familiar with the FFT algorithm and the Signal Processing Toolbox in Matlab. 
 
 \newpage
 

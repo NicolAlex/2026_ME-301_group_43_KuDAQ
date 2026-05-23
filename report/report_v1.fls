@@ -59,6 +59,24 @@ INPUT c:/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty
 INPUT c:/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/dvipsnam.def
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/dvipsnam.def
+INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/dvipsnam.def
+INPUT c:/texlive/2026/texmf-dist/tex/latex/xcolor/svgnam.def
+INPUT c:/texlive/2026/texmf-dist/tex/latex/xcolor/svgnam.def
+INPUT c:/texlive/2026/texmf-dist/tex/latex/xcolor/svgnam.def
+INPUT c:/texlive/2026/texmf-dist/tex/latex/caption/caption.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/caption/caption.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/caption/caption3.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/caption/caption3.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/hyperref/hyperref.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/hyperref/hyperref.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty
@@ -108,6 +126,8 @@ INPUT c:/texlive/2026/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
 INPUT c:/texlive/2026/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
 INPUT c:/texlive/2026/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/titlesec/titlesec.sty
+INPUT c:/texlive/2026/texmf-dist/tex/latex/titlesec/titlesec.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/float/float.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/float/float.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty
@@ -119,13 +139,6 @@ INPUT c:/texlive/2026/texmf-dist/tex/latex/translations/translations.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/tools/array.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/tools/array.sty
 INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/color.sty
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/color.sty
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx
-INPUT c:/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx
 INPUT c:/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 INPUT c:/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 INPUT ./report_v1.aux
@@ -193,11 +206,153 @@ OUTPUT report_v1.toc
 INPUT c:/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
 INPUT c:/texlive/2026/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm
 INPUT c:/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
+INPUT c:/texlive/2026/texmf-dist/fonts/tfm/public/cm/cmbxti10.tfm
+INPUT ./KuDAQ_diagram_png.drawio.png
+INPUT ./KuDAQ_diagram_png.drawio.png
+INPUT ./KuDAQ_diagram_png.drawio.png
+INPUT ./KuDAQ_diagram_png.drawio.png
+INPUT ./KuDAQ_diagram_png.drawio.png
+INPUT ./IMG_1313.jpg
+INPUT ./IMG_1313.jpg
+INPUT ./IMG_1313.jpg
+INPUT ./IMG_1313.jpg
+INPUT ./IMG_1313.jpg
+INPUT ./IMG_1318.jpg
+INPUT ./IMG_1318.jpg
+INPUT ./IMG_1318.jpg
+INPUT ./IMG_1318.jpg
+INPUT ./IMG_1318.jpg
+INPUT ./IMG_1322.jpg
+INPUT ./IMG_1322.jpg
+INPUT ./IMG_1322.jpg
+INPUT ./IMG_1322.jpg
+INPUT ./IMG_1322.jpg
+INPUT ./IMG_1324.jpg
+INPUT ./IMG_1324.jpg
+INPUT ./IMG_1324.jpg
+INPUT ./IMG_1324.jpg
+INPUT ./IMG_1324.jpg
+INPUT ./core_task_pinning.png
+INPUT ./core_task_pinning.png
+INPUT ./core_task_pinning.png
+INPUT ./core_task_pinning.png
+INPUT ./core_task_pinning.png
+INPUT ./millis_check.png
+INPUT ./millis_check.png
+INPUT ./millis_check.png
+INPUT ./millis_check.png
+INPUT ./millis_check.png
+INPUT ./rtos_queue.png
+INPUT ./rtos_queue.png
+INPUT ./rtos_queue.png
+INPUT ./rtos_queue.png
+INPUT ./rtos_queue.png
+INPUT ./circular_buffer.png
+INPUT ./circular_buffer.png
+INPUT ./circular_buffer.png
+INPUT ./circular_buffer.png
+INPUT ./circular_buffer.png
+INPUT ./irr_filter.png
+INPUT ./irr_filter.png
+INPUT ./irr_filter.png
+INPUT ./irr_filter.png
+INPUT ./irr_filter.png
+INPUT ./ahrs_fusion.png
+INPUT ./ahrs_fusion.png
+INPUT ./ahrs_fusion.png
+INPUT ./ahrs_fusion.png
+INPUT ./ahrs_fusion.png
+INPUT ./wifi_setup.png
+INPUT ./wifi_setup.png
+INPUT ./wifi_setup.png
+INPUT ./wifi_setup.png
+INPUT ./wifi_setup.png
+INPUT ./shark_teeth_example.png
+INPUT ./shark_teeth_example.png
+INPUT ./shark_teeth_example.png
+INPUT ./shark_teeth_example.png
+INPUT ./shark_teeth_example.png
+INPUT ./Raw Data v.s. Sine of Data for Axis 3.png
+INPUT ./Raw Data v.s. Sine of Data for Axis 3.png
+INPUT ./Raw Data v.s. Sine of Data for Axis 3.png
+INPUT ./Raw Data v.s. Sine of Data for Axis 3.png
+INPUT ./Raw Data v.s. Sine of Data for Axis 3.png
+INPUT ./25mm - sine full.png
+INPUT ./25mm - sine full.png
+INPUT ./25mm - sine full.png
+INPUT ./25mm - sine full.png
+INPUT ./25mm - sine full.png
+INPUT ./25mm - sine sample 1.png
+INPUT ./25mm - sine sample 1.png
+INPUT ./25mm - sine sample 1.png
+INPUT ./25mm - sine sample 1.png
+INPUT ./25mm - sine sample 1.png
+INPUT ./25mm - sine sample 2.png
+INPUT ./25mm - sine sample 2.png
+INPUT ./25mm - sine sample 2.png
+INPUT ./25mm - sine sample 2.png
+INPUT ./25mm - sine sample 2.png
+INPUT ./25mm - sine sample 3.png
+INPUT ./25mm - sine sample 3.png
+INPUT ./25mm - sine sample 3.png
+INPUT ./25mm - sine sample 3.png
+INPUT ./25mm - sine sample 3.png
+INPUT ./25mm - FFT sample 1.png
+INPUT ./25mm - FFT sample 1.png
+INPUT ./25mm - FFT sample 1.png
+INPUT ./25mm - FFT sample 1.png
+INPUT ./25mm - FFT sample 1.png
+INPUT ./25mm - FFT sample 2.png
+INPUT ./25mm - FFT sample 2.png
+INPUT ./25mm - FFT sample 2.png
+INPUT ./25mm - FFT sample 2.png
+INPUT ./25mm - FFT sample 2.png
+INPUT ./25mm - FFT sample 3.png
+INPUT ./25mm - FFT sample 3.png
+INPUT ./25mm - FFT sample 3.png
+INPUT ./25mm - FFT sample 3.png
+INPUT ./25mm - FFT sample 3.png
+INPUT ./25mm - FFT full.png
+INPUT ./25mm - FFT full.png
+INPUT ./25mm - FFT full.png
+INPUT ./25mm - FFT full.png
+INPUT ./25mm - FFT full.png
+INPUT ./50mm - FFT sample 1.png
+INPUT ./50mm - FFT sample 1.png
+INPUT ./50mm - FFT sample 1.png
+INPUT ./50mm - FFT sample 1.png
+INPUT ./50mm - FFT sample 1.png
+INPUT ./50mm - FFT sample 2.png
+INPUT ./50mm - FFT sample 2.png
+INPUT ./50mm - FFT sample 2.png
+INPUT ./50mm - FFT sample 2.png
+INPUT ./50mm - FFT sample 2.png
+INPUT ./50mm - FFT sample 3.png
+INPUT ./50mm - FFT sample 3.png
+INPUT ./50mm - FFT sample 3.png
+INPUT ./50mm - FFT sample 3.png
+INPUT ./50mm - FFT sample 3.png
+INPUT ./10mm - FFT sample 1.png
+INPUT ./10mm - FFT sample 1.png
+INPUT ./10mm - FFT sample 1.png
+INPUT ./10mm - FFT sample 1.png
+INPUT ./10mm - FFT sample 1.png
+INPUT ./10mm - FFT sample 2.png
+INPUT ./10mm - FFT sample 2.png
+INPUT ./10mm - FFT sample 2.png
+INPUT ./10mm - FFT sample 2.png
+INPUT ./10mm - FFT sample 2.png
+INPUT ./Frequency v.s. nozzle depth.png
+INPUT ./Frequency v.s. nozzle depth.png
+INPUT ./Frequency v.s. nozzle depth.png
+INPUT ./Frequency v.s. nozzle depth.png
+INPUT ./Frequency v.s. nozzle depth.png
 INPUT report_v1.aux
 INPUT ./report_v1.out
 INPUT ./report_v1.out
 INPUT c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 INPUT c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
+INPUT c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb
 INPUT c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb
 INPUT c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb
 INPUT c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb

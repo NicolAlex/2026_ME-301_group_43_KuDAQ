@@ -90,7 +90,6 @@ bool Sensor::read_data() {
     // read both accel and gyro via the bmi wrapper
     bmi->readSensor();
     // check if enough time has passed since the last reading based on the sampling rate
-    // compute sampling interval in milliseconds and use millis() for timing
     unsigned long intervalMs = (unsigned long)(1000.0f / sampling_rate);
     if (millis() - last_timestamp >= intervalMs) {
         #ifdef DEBUG
@@ -424,7 +423,7 @@ void KuDAQ::updateCore0() {
             orientation1_sender = sensor1->getRawOrientation();
             // send only if there's new data
             if (orientation1_sender.newData) {
-            // For now, send orientation data over the queue (instead of accel) for testing
+            // For now, send orientation data over the queue
             xQueueOverwrite(orientationQueue, &orientation1_sender);
             orientation1_sender.newData = false; // Mark data as sent
 
